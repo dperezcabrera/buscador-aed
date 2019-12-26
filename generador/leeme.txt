@@ -1,0 +1,63 @@
+      AED - Curso 2003/2004 - Ginés García Mateos - DIS - UM
+               http://dis.um.es/~ginesgm/aed.html
+              GENERADOR DE CONJUNTOS DE PAGINAS WEB
+                 Version 0.0.  Diciembre 2003
+
+COMPILACION:
+
+    Para compilar el programa simplemente ejecutar: make
+    Se creará el fichero: generador
+
+
+EJECUCION:
+
+    Ejecutar: ./generador
+    El programa pedirá 6 parámetros:
+    - Nombre del fichero de palabras (fichero de lectura). Nombre de un fichero
+        que contenga palabras que luego serán usadas para generar las páginas.
+        Se ha incluido el fichero: palabras.txt, para usarlo aquí.
+    - Nombre del fichero maestro (fichero de escritura). Nombre que tendrá el
+        fichero maestro resultante. Ojo, en caso de existir será sobreescrito.
+        Este fichero debe estar en el mismo directorio donde se ha ejecutado el
+        programa. Por ejemplo, se puede poner: maestro.txt
+    - Directorio base de salida. Nombre de un directorio (puede existir o no)
+        bajo el cual serán colocadas las páginas resultantes, dentro del directorio
+        actual. Si ya existen otras páginas en este directorio, serán
+        sobreescritas. El programa indicará este directorio en el fichero maestro
+        de forma oportuna.
+    - Número de páginas a generar. Debe ser un número entero mayor que 0. Se
+        deberán usar típicamente los valores: 1000, 2000, 5000, 10000.
+    - Número mínimo y máximo de palabras por página. El número de palabras por cada
+        página generada variará aleatoriamente entre estos dos valores. Por
+        ejemplo, usar los valores: 10-100, 20-1000, 10-2000, etc.
+
+
+EJEMPLO:
+
+>> ./generador
+   AED - Curso 2003/2004 - Gines Garcia Mateos - UM
+       Generador de conjuntos de paginas web
+            Version 0.0.  Diciembre 2003
+
+Nombre del fichero de palabras (lectura): palabras.txt
+Nombre del fichero maestro (escritura): maestro.txt
+Directorio base de salida: res
+Numero de paginas a generar: 2000
+Numero minimo de palabras por pagina: 20
+Numero maximo de palabras por pagina: 1000
+Leyendo fichero de palabras...
+Numero total de caracteres leidos: 222229
+Numero total de palabras: 31760
+Numero de palabras distintas: 3149
+.........................................................................
+.........................................................................
+.........................................................................
+Hecho.
+
+
+
+NOTA:
+
+    Los valores indicados por el programa (número de palabras leídas, número
+    de palabras distintas y número de palabras por página) pueden no ser exactos,
+    de acuerdo con la definición de palabra dada en el enunciado de la práctica.
