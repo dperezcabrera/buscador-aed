@@ -12,56 +12,58 @@
 #define LETRA_MAYOR  90
 
 /*/ quita tildes y pasa a minusculas /*/
+// las paginas de entrada vienen en ISO-8859-1, por eso
+// las vocales acentuadas van como escapes \x de esa codificacion
 void trasforma_letra(char &letra) {
 
   switch (letra)
     {
-    case 'á':
-    case 'à':
-    case 'ä':
-    case 'â':
-    case 'Á':
-    case 'À':
-    case 'Ä':
-    case 'Â': { letra = 'a' ; break ;}    
-    case 'é':
-    case 'è':
-    case 'ë':
-    case 'ê':
-    case 'É':
-    case 'È':
-    case 'Ë':
+    case '\xe1': // Ã¡
+    case '\xe0': // Ã 
+    case '\xe4': // Ã¤
+    case '\xe2': // Ã¢
+    case '\xc1': // Ã
+    case '\xc0': // Ã€
+    case '\xc4': // Ã„
+    case '\xc2': { letra = 'a' ; break ;} // Ã‚
+    case '\xe9': // Ã©
+    case '\xe8': // Ã¨
+    case '\xeb': // Ã«
+    case '\xea': // Ãª
+    case '\xc9': // Ã‰
+    case '\xc8': // Ãˆ
+    case '\xcb': // Ã‹
     case 'E':
-    case 'Ê': { letra = 'e' ; break ;}
-    case 'í':
-    case 'ì':
-    case 'ï':
-    case 'î':
+    case '\xca': { letra = 'e' ; break ;} // ÃŠ
+    case '\xed': // Ã­
+    case '\xec': // Ã¬
+    case '\xef': // Ã¯
+    case '\xee': // Ã®
     case 'I':
-    case 'Í':
-    case 'Ì':
-    case 'Ï':
-    case 'Î': { letra = 'i' ; break ;} 
-    case 'ó':
-    case 'ò':
-    case 'ö':
-    case 'ô':
+    case '\xcd': // Ã
+    case '\xcc': // ÃŒ
+    case '\xcf': // Ã
+    case '\xce': { letra = 'i' ; break ;} // ÃŽ
+    case '\xf3': // Ã³
+    case '\xf2': // Ã²
+    case '\xf6': // Ã¶
+    case '\xf4': // Ã´
     case 'O':
-    case 'Ó':
-    case 'Ò':
-    case 'Ö':
-    case 'Ô': { letra = 'o' ; break ;}
-    case 'ú':
-    case 'ù':
-    case 'ü':
-    case 'û':
+    case '\xd3': // Ã“
+    case '\xd2': // Ã’
+    case '\xd6': // Ã–
+    case '\xd4': { letra = 'o' ; break ;} // Ã”
+    case '\xfa': // Ãº
+    case '\xf9': // Ã¹
+    case '\xfc': // Ã¼
+    case '\xfb': // Ã»
     case 'U':
-    case 'Ú':
-    case 'Ù':
-    case 'Ü':
-    case 'Û': { letra = 'u' ; break ;}
+    case '\xda': // Ãš
+    case '\xd9': // Ã™
+    case '\xdb': // Ã›
+    case '\xdc': { letra = 'u' ; break ;} // Ãœ
     }
-  if (( letra >= LETRA_MENOR ) and ( letra <= LETRA_MAYOR )or ( letra == 'Ñ' ) ) { 
+  if (( letra >= LETRA_MENOR ) and ( letra <= LETRA_MAYOR )or ( letra == '\xd1' ) ) { // Ã‘
     letra += 32 ;
   }
 }
@@ -73,47 +75,28 @@ bool aceptar_letra(char &c) {
 // si dos palabras estan separadas por comas, puntos,etc........
 
   trasforma_letra( c ) ;
-  return ( isalpha( c ) or (c == 'ñ') ) ;
+  return ( isalpha( (unsigned char) c ) or (c == '\xf1') ) ; // Ã±
 }
 
-/*/ convierte un string a minusculas /*/
-void str_minusculas(string& palabra){
+/*/ convierte una cadena a minusculas /*/
+string minusculas(const char *palabra) {
 
-  char c ;
-  int i,leng = palabra.length() ;
-  char *pal = new char [leng+1] ;
-
-  for ( i = 0 ; i < leng ; i++ ) {
-    c = palabra[i];
-    trasforma_letra( c );
-    pal[i] =  c ;
-  }
-  pal[leng] = endstrg ;
-}
-
-/*/ convierte una cadena a minusculas /*/ 
-char* minusculas(const char *palabra) {
-    
-   char *res = new char [ strlen(palabra)+1 ] ;
-   int longitud = strlen(palabra);
+   string res( palabra ) ;
+   int longitud = res.length() ;
    for( int i = 0 ; i < longitud ; i++ ) {
-     char c = palabra[ i ] ;
-     trasforma_letra ( c ) ;
-     res[i] = c ;
+     trasforma_letra ( res[i] ) ;
    }
-   res[longitud] = endstrg ;
    return res ;
 }
 
 /*/ convierte una cadena a mayusculas /*/
-char* mayusculas(const char *palabra) {
-    
-   char *res = new char [ strlen(palabra)+1 ] ;
-   int longitud = strlen(palabra);
-	for( int i = 0 ; i < longitud ; i++ ) {
-	   res[i] = toupper( palabra[i] ) ;
-	}
-   res[longitud] = endstrg ;
+string mayusculas(const char *palabra) {
+
+   string res( palabra ) ;
+   int longitud = res.length() ;
+   for( int i = 0 ; i < longitud ; i++ ) {
+      res[i] = toupper( (unsigned char) res[i] ) ;
+   }
    return res ;
 }
 

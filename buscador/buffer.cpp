@@ -9,19 +9,6 @@
 #include "buffer.hpp" 
 
 
-/*/ cuenta el numero de caracteres c en la cadena p /*/
-int cuenta(const char *p,const char c) {
-   
-   int   res =  0 ;
-   int    i  =  0 ;
-   while( p[i] != endstrg ) {
-     if ( p[i] == c )
-       res++;
-     i++;
-   }
-   return res;
-}
-
 /*/ comprueba si el caracter es especial /*/
 // abrir o cerrar parentesis o las comillas
 // se sustitye la comilla simple por la doble
@@ -38,39 +25,24 @@ bool is_especial(char& c) {
 }
 
 /*/ limpia una linea pasada como string /*/
-// se le añaden huecos en blanco antes y despues
+// se le aÃ±aden huecos en blanco antes y despues
 // de los caracteres especiales  para evitar que 
 // formen parte de una palabra mayor que no existe
 
-char* limpiar_linea(string Linea) {
-   
-   char *linea = new char [Linea.length()+1];
-   char  blanco=' ' ;
-   char *linea2;
-   strcpy(linea,Linea.c_str());
-   int maximo=strlen(linea)+1, j=0, i=0;
+string limpiar_linea(string Linea) {
 
-   maximo += (2 * cuenta(linea,'(' ) ) ;
-   maximo += (2 * cuenta(linea,')' ) ) ;
-   maximo += (2 * cuenta(linea,'\'') ) ;
-   maximo += (2 * cuenta(linea,'"' ) ) ;
-
-   linea2=new char[maximo];
-   
-   while (linea[i] != endstrg ) {
-      if ( is_especial(linea[i]) ) {
-	 linea2[j]   =    space ;
-	 linea2[j+1] = linea[i] ;
-	 linea2[j+2] =    space ;
-	 j+=3;
+   string linea2 ;
+   int longitud = Linea.length() ;
+   for ( int i = 0 ; i < longitud ; i++ ) {
+      if ( is_especial(Linea[i]) ) {
+	 linea2 += space    ;
+	 linea2 += Linea[i] ;
+	 linea2 += space    ;
       }
-      else { 
-	linea2[j] = linea[i] ; 
-	j++ ; 
+      else {
+	linea2 += Linea[i] ;
       }
-      i++;
    }
-   linea2[j] = endstrg ;
    return linea2 ;
 }
 
@@ -133,11 +105,19 @@ void Lee_buffer(list<string>& lista_pal, std::istream& in,std::ostream& out) {
    string linea2 ;
    bool salir = false ;
    string       linea ;
-   while ( not salir ) {  
+   while ( not salir ) {
      prompt(out) ;
-     while ( linea.size() == 0 ) { 
+     while ( linea.size() == 0 ) {
        in.clear() ;
        getline( in, linea ) ;
+       // fin de entrada sin QUIT: salir en vez de
+       // reintentar para siempre quemando la CPU
+       if ( in.eof() ) {
+	 lista_pal.clear() ;
+	 lista_pal.push_back("QUIT") ;
+	 lista_pal.push_back("QUIT") ;
+	 return ;
+       }
        if (linea.size() == 0 ) {
 	 out << endl ;
 	 prompt(out) ;

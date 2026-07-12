@@ -180,7 +180,7 @@ class Contenedor
   void mostrar_datos  (cronometro,int)      ; // &
   int  Sizeof_and_sort( )                   ; // &
   Lista_datos Lista_total_paginas( )        ; // &
-  Lista_datos Search( string& )             ; // &
+  Lista_datos* Search( string& )            ; // &
 
 public:
   /*/ operaciones /*/

@@ -106,10 +106,10 @@ close_hash<T,key>::~close_hash() {
 	  delete (elementos[k]) ;
 	}
       }
-      delete  (elementos) ;
+      delete[] elementos ;
     }
     if (  indices  != NULL ) {
-      delete (indices) ;
+      delete[] indices ;
     }
     if (   claves  != NULL ) {
       for(int k = 0 ; k < tama ; k++) {
@@ -117,10 +117,10 @@ close_hash<T,key>::~close_hash() {
 	  delete(claves[k]);
 	}
       }
-      delete (claves) ;
+      delete[] claves ;
     }
     if (siguientes != NULL ) {
-      delete siguientes ;
+      delete[] siguientes ;
     }
     tama          = 0 ;
     gestor_vacios = 0 ;
@@ -139,19 +139,19 @@ void close_hash<T,key>::clear() {
 	  delete (elementos[k]) ;
 	}
       }
-      delete  (elementos) ;
+      delete[] elementos ;
     }
     if (  indices  != NULL )
-      delete (indices) ;
+      delete[] indices ;
     if (   claves  != NULL ) {
       for(int k = 0 ; k < tama ; k++) {
 	if (claves[k] != NULL)
 	  delete(claves[k]);
       }
-      delete (claves) ;
+      delete[] claves ;
     }
     if (siguientes != NULL )
-    delete (siguientes) ;
+    delete[] siguientes ;
     tama          = 0 ;
     gestor_vacios = 0 ;
     num_elementos = 0 ;
@@ -161,7 +161,7 @@ void close_hash<T,key>::clear() {
 template<class T, class key>
 //devuelve num de elementos en la tabla close_hash
 int close_hash<T,key>::size(){
-  return num_elementos;//aquÌ estar· el num de elementos
+  return num_elementos;//aqu√≠ estar√° el num de elementos
 }
 
 
@@ -352,12 +352,13 @@ bool close_hash<T,key>::erase(const key clav) {
 	return false ;
       }
     }
+    return false ; // lista vacia: la clave no estaba
   }
   else {
     cerr << alert << "ERROR: elemento del tipo close_hash "
 	 << "destruido " << endl ;
     exit(1);
-  }  
+  }
 }
 
 template<class T, class key>
@@ -551,6 +552,7 @@ bool close_hash<T,key>::asign(close_hash<T,key>& fuente) {
     while ( fuente.front(clav,element) ) {
       (*this).inserta(clav,element) ;
     }
+    return true ;
   }
   else {
     cerr << alert << "ERROR: elemento del tipo close_hash "
@@ -560,7 +562,7 @@ bool close_hash<T,key>::asign(close_hash<T,key>& fuente) {
 }
 
 template<class T,class key>
-// devuelve el tamaÒo en bytes 
+// devuelve el tama√±o en bytes 
 // que necesita la estructura close_hash
 int  close_hash<T,key>::size_of() {
 

@@ -32,11 +32,10 @@ private:
   void mostrar();
 };
 
-void str_minusculas  (string& palabra)     ; // &
-void  trasforma_letra(char &letra)         ; // &
-bool  aceptar_letra  (char &c)             ; // &
-char* mayusculas     (const char *palabra) ; // &
-char* minusculas     (const char *palabra) ; // &
+void   trasforma_letra(char &letra)         ; // &
+bool   aceptar_letra  (char &c)             ; // &
+string mayusculas     (const char *palabra) ; // &
+string minusculas     (const char *palabra) ; // &
 
 #endif
 /* 

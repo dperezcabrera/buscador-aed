@@ -587,13 +587,7 @@ void ordenar_lista_y_medir(Lista_datos& l,void *&psizeof) {
 /*/ destructor /*/
 Contenedor::~Contenedor() {
 
-  cargado = false ;
-  read_word   = 0 ;
-  word_dist   = 0 ;
-  web_leidas  = 0 ;
-  tabla_pag.clear() ;
-  tabla_palabras.clear() ;
-  list_dat_total.Clear() ;
+  (*this).Clear() ;
 }
 
 /*/ borrar el contenedor /*/
@@ -605,6 +599,14 @@ void Contenedor::Clear ( ) {
   web_leidas  = 0 ;
   tabla_pag.clear() ;
   tabla_palabras.clear() ;
+  // las Pagina se crean en inserta_nueva y solo hay un
+  // nodo por pagina en list_dat_total: se liberan aqui
+  list<Nodo>::iterator j = list_dat_total.list_nodo.begin() ;
+  list<Nodo>::iterator end = list_dat_total.list_nodo.end() ;
+  while ( j != end ) {
+    delete (*j).Pag ;
+    j++ ;
+  }
   list_dat_total.Clear() ;
 }
 
@@ -647,31 +649,9 @@ void Contenedor::inserta_pagina(string& pal,Pagina* pag ) {
    list<string> *lista = tabla_pag.search( pag ) ;
 
    if ( lista ) {
-     if ( (*lista).size() == 0 ) {
-       (*lista).push_front(pal) ;
-     }
-     else {
-       list<string>::iterator i = (*lista).begin() ;
-       list<string>::iterator end = (*lista).end() ;
-       list<string>::iterator j = (*lista).begin() ;
-       
-       if ( (*i) > pal ) {
-	 (*lista).push_front(pal) ;
-       }
-       else {
-	 i++;
-	 while ( ( i != end ) and ( (*j) < pal ) ) {
-	   i++ ;
-	   j++ ;
-	 }
-	 if ( ( i == end ) and ( (*j) < pal ) ) {
-	   (*lista).push_back(pal) ;
-	 }
-	 else {
-	   (*lista).insert( i , pal) ;
-	 }
-       }   
-     }
+     // sin orden: nadie lo aprovechaba y la insercion
+     // ordenada hacia la carga cuadratica por pagina
+     (*lista).push_front(pal) ;
    }
    else {
      cerr << alert << "ERROR : en  inserta_pag "<< endl ;
@@ -729,22 +709,26 @@ void Contenedor::Or(list<string>& lista,std::ostream& out) {
     if ( j != end ) {
       c.iniciar() ;
       string     buscar ;
-      Lista_datos L_aux ;
-      Lista_datos P_aux ;
-      Lista_datos I_aux ;
+      Lista_datos vacia ;
+      Lista_datos resultado ;
+      vacia.permitir_com = false ;
 
       buscar=minusculas( (*j).c_str() ) ;
-      L_aux = (*this).Search( buscar ) ;
+      Lista_datos *actual = (*this).Search( buscar ) ;
+      if ( actual == NULL )
+	actual = &vacia ;
       j++ ;
       bool salir = false ;
 
       while ( ( j != end ) and ( not salir) ) {
-	I_aux  = L_aux ;
 	buscar = minusculas( (*j).c_str() ) ;
-	P_aux  = (*this).Search( buscar ) ;
-	L_aux  = OR( I_aux, P_aux ) ;
+	Lista_datos *p2 = (*this).Search( buscar ) ;
+	if ( p2 == NULL )
+	  p2 = &vacia ;
+	resultado = OR( *actual, *p2 ) ;
+	actual = &resultado ;
 	j++ ;
-	if (L_aux.Size() == web_leidas) {
+	if ((*actual).Size() == web_leidas) {
 	  salir = true ;
 	}
       }
@@ -754,7 +738,7 @@ void Contenedor::Or(list<string>& lista,std::ostream& out) {
 	list_dat_total.Show( out ) ;
       }
       else {
-	L_aux.Show( out ) ;
+	(*actual).Show( out ) ;
       }
       out << endl ;
     }
@@ -780,29 +764,31 @@ void Contenedor::Not(list<string>& lista,std::ostream& out) {
      cronometro c ;
      c.iniciar() ;
      string buscar;
-     Lista_datos L_aux;
-     Lista_datos P_aux;
-     Lista_datos I_aux;
-     
+     Lista_datos vacia ;
+     Lista_datos resultado ;
+     vacia.permitir_com = false ;
+
      buscar = minusculas( (*j).c_str( ) ) ;
-     I_aux  = (*this).Search(buscar) ;
-     P_aux  = list_dat_total ;
-     L_aux  = XOR( I_aux , P_aux ) ;
+     Lista_datos *pl = (*this).Search(buscar) ;
+     if ( pl == NULL )
+       pl = &vacia ;
+     resultado = XOR( *pl , list_dat_total ) ;
      j++;
      bool salir = false ;
      while ( ( j != end ) and ( not salir ) ) {
-       I_aux  = L_aux ;
        buscar = minusculas( (*j).c_str() ) ;
-       P_aux  = (*this).Search( buscar ) ;
-       L_aux  = OPN( I_aux , P_aux ) ;
+       pl = (*this).Search( buscar ) ;
+       if ( pl == NULL )
+	 pl = &vacia ;
+       resultado = OPN( resultado , *pl ) ;
        j++ ;
-       if ( L_aux.Size() == 0 ) {
-	 salir = true ; 
+       if ( resultado.Size() == 0 ) {
+	 salir = true ;
        }
      }
      c.parar();
      out << c.milisegundos() <<" ms"<< endl;
-     L_aux.Show( out ) ;
+     resultado.Show( out ) ;
      out << endl ;
    }
    else
@@ -828,27 +814,31 @@ void Contenedor::Com(list<string>& lista,std::ostream& out) {
      cronometro c ;
      c.iniciar() ;
      string     buscar ;
-     Lista_datos L_aux ;
-     Lista_datos P_aux ;
-     Lista_datos I_aux ;
-     
+     Lista_datos vacia ;
+     Lista_datos resultado ;
+     vacia.permitir_com = false ;
+
      buscar = minusculas( (*j).c_str() ) ;
-     L_aux  = (*this).Search( buscar ) ;
+     Lista_datos *actual = (*this).Search( buscar ) ;
+     if ( actual == NULL )
+       actual = &vacia ;
      j++ ;
       bool salir = false ;
       while ( ( j != end ) and ( not salir ) ) {
-	I_aux  = L_aux ;
 	buscar = minusculas( (*j).c_str() ) ;
-	P_aux  = (*this).Search( buscar ) ;
-	L_aux  = COM( I_aux, P_aux) ;
+	Lista_datos *p2 = (*this).Search( buscar ) ;
+	if ( p2 == NULL )
+	  p2 = &vacia ;
+	resultado = COM( *actual, *p2 ) ;
+	actual = &resultado ;
 	j++ ;
-	if ( L_aux.Size() == 0 ) {
-	  salir = true ; 
+	if ( (*actual).Size() == 0 ) {
+	  salir = true ;
 	}
       }
       c.parar();
       out << c.milisegundos() <<" ms"<< endl;
-      L_aux.Show( out ) ;
+      (*actual).Show( out ) ;
       out << endl ;
    }
    else
@@ -874,27 +864,31 @@ void Contenedor::And(list<string>& lista,std::ostream& out) {
       cronometro c ;
       c.iniciar() ;
       string     buscar ;
-      Lista_datos L_aux ;
-      Lista_datos P_aux ;
-      Lista_datos I_aux ;
-      
+      Lista_datos vacia ;
+      Lista_datos resultado ;
+      vacia.permitir_com = false ;
+
       buscar = minusculas( (*j).c_str() ) ;
-      L_aux  = (*this).Search( buscar ) ;
+      Lista_datos *actual = (*this).Search( buscar ) ;
+      if ( actual == NULL )
+	actual = &vacia ;
       j++ ;
       bool salir = false ;
       while ( ( j != end )and ( not salir ) ) {
-	 I_aux  = L_aux ;
 	 buscar = minusculas( (*j).c_str() ) ;
-	 P_aux  = (*this).Search( buscar ) ;
-	 L_aux  = AND( I_aux, P_aux) ;
+	 Lista_datos *p2 = (*this).Search( buscar ) ;
+	 if ( p2 == NULL )
+	   p2 = &vacia ;
+	 resultado = AND( *actual, *p2 ) ;
+	 actual = &resultado ;
 	 j++ ;
-	 if ( L_aux.Size() == 0 ) {
-	   salir = true ; 
+	 if ( (*actual).Size() == 0 ) {
+	   salir = true ;
 	 }
       }
       c.parar();
       out << c.milisegundos() <<" ms"<< endl;
-      L_aux.Show( out ) ;
+      (*actual).Show( out ) ;
       out << endl ;
    }
    else
@@ -910,18 +904,10 @@ void Contenedor::And(list<string>& lista,std::ostream& out) {
 }
 
 /*/ buscar palabra /*/
-Lista_datos Contenedor::Search( string& pal ) {
+// devuelve la lista del indice sin copiarla, NULL si no esta
+Lista_datos* Contenedor::Search( string& pal ) {
 
-  Lista_datos *lista = tabla_palabras.search( pal ) ;
-  
-  if ( lista )
-    return (*lista) ;
-  else {
-    lista = new(Lista_datos) ;
-    lista->error = false ;
-    lista->permitir_com = false ;
-    return (*lista) ;
-  }
+  return tabla_palabras.search( pal ) ;
 }
 
 /*/ insertar nueva web /*/
@@ -1098,16 +1084,15 @@ bool Contenedor::Insert(string url,string fich_pag,int relevancia) {
 /*/ sizeof /*/
 int  Contenedor::Sizeof_and_sort( ) {
 
- int * i= new (int) ;
- (*i) = 0 ;
+ int total = 0 ;
  list_dat_total.Sort() ;
- tabla_palabras.for_each(ordenar_lista_y_medir,i) ;
- tabla_pag.for_each(medir_bytes,i);
- (*i) += sizeof(list_dat_total) ;
- (*i) += tabla_palabras.size_of() ;
- (*i) += tabla_pag.size_of() ;
- (*i) += sizeof(int) * 2 ;
- return (*i) ;
+ tabla_palabras.for_each(ordenar_lista_y_medir,&total) ;
+ tabla_pag.for_each(medir_bytes,&total);
+ total += sizeof(list_dat_total) ;
+ total += tabla_palabras.size_of() ;
+ total += tabla_pag.size_of() ;
+ total += sizeof(int) * 2 ;
+ return total ;
 }
 
 /*/ load /*/
