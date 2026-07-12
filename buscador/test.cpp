@@ -29,6 +29,14 @@ int main() {
   assert( minusculas("cami\xf3n")  == "camion" ) ; // camión
   assert( minusculas("CAMI\xd3N")  == "camion" ) ; // CAMIÓN
 
+  /*/ limpiar_html: etiquetas fuera, entidades decodificadas /*/
+  istringstream html("<p>cami&oacute;n <script>var x=1;</script>"
+		     "<style>.rojo{}</style>ROJO</p> 42") ;
+  istringstream texto( limpiar_html(html) ) ;
+  assert( lee(texto) == "camion" ) ; // entidad + tilde plegada
+  assert( lee(texto) == "rojo"   ) ; // script y style no se indexan
+  assert( lee(texto) == SALIR    ) ; // "42" no es palabra
+
   /*/ tokenizador: comillas se traducen a ( COM ... ) /*/
   list<string> tokens ;
   crear_lista( limpiar_linea("busca 'foo bar'"), tokens ) ;

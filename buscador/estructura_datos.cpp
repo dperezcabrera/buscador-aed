@@ -66,6 +66,80 @@ bool f_aux_com(Nodo& res,Nodo& p,Nodo& q) {
    return retur;
 }
 
+/*/ decodifica una entidad html (sin & ni ;) a latin-1 /*/
+char decodifica_entidad(const string& ent) {
+
+  if ( ent.size() > 1 and ent[0] == '#' ) {
+    int v = atoi( ent.c_str()+1 ) ;
+    return ( v >= 32 and v < 256 ) ? (char) v : ' ' ;
+  }
+  static const struct { const char *nombre ; char letra ; } tabla[] = {
+    {"aacute",'\xe1'}, {"eacute",'\xe9'}, {"iacute",'\xed'},
+    {"oacute",'\xf3'}, {"uacute",'\xfa'}, {"ntilde",'\xf1'},
+    {"Aacute",'\xc1'}, {"Eacute",'\xc9'}, {"Iacute",'\xcd'},
+    {"Oacute",'\xd3'}, {"Uacute",'\xda'}, {"Ntilde",'\xd1'},
+    {"uuml"  ,'\xfc'}, {"Uuml"  ,'\xdc'},
+    {"amp",'&'}, {"lt",'<'}, {"gt",'>'}, {"quot",'"'}, {"nbsp",' '},
+  } ;
+  for ( unsigned k = 0 ; k < sizeof(tabla)/sizeof(tabla[0]) ; k++ ) {
+    if ( ent == tabla[k].nombre )
+      return tabla[k].letra ;
+  }
+  return ' ' ; // entidad desconocida: separador
+}
+
+/*/ reduce html a texto plano: quita etiquetas (script y  /*/
+/*/ style enteros) y decodifica las entidades basicas     /*/
+// ponytail: una etiqueta corta palabra ("cami<b>on</b>" da
+// "cami on"); unir inline tags si algun dia molesta
+string limpiar_html(std::istream& in) {
+
+  string html, bajo, texto ;
+  char c ;
+  while ( in.get(c) )
+    html += c ;
+  bajo = html ;
+  for ( unsigned k = 0 ; k < bajo.size() ; k++ )
+    bajo[k] = tolower( (unsigned char) bajo[k] ) ;
+
+  unsigned i = 0 ;
+  while ( i < html.size() ) {
+    if ( html[i] == '<' ) {
+      // nombre de la etiqueta
+      unsigned j = i+1 ;
+      string nombre ;
+      while ( j < bajo.size() and bajo[j] != '>'
+	      and not isspace( (unsigned char) bajo[j] ) ) {
+	nombre += bajo[j] ;
+	j++ ;
+      }
+      if ( nombre == "script" or nombre == "style" ) {
+	size_t fin = bajo.find( "</" + nombre , i ) ;
+	i = ( fin == string::npos ) ? html.size() : (unsigned) fin ;
+      }
+      size_t cierre = html.find( '>' , i ) ;
+      i = ( cierre == string::npos ) ? html.size() : (unsigned) cierre+1 ;
+      texto += ' ' ;
+    }
+    else if ( html[i] == '&' ) {
+      size_t fin = html.find( ';' , i ) ;
+      if ( fin != string::npos and fin > i+1 and fin <= i+8 ) {
+	texto += decodifica_entidad( html.substr( i+1 , fin-i-1 ) ) ;
+	i = (unsigned) fin+1 ;
+      }
+      else {
+	texto += ' ' ; // & suelto
+	i++ ;
+      }
+    }
+    else {
+      texto += html[i] ;
+      i++ ;
+    }
+  }
+  return texto ;
+}
+
 /*/ funcion auxiliar para load para leer de un fichero /*/
 string lee(std::istream& in ) {
 
@@ -930,15 +1004,16 @@ void Contenedor::inserta_nueva(string url,string nombre_fich_pagina,int relevanc
      list_dat_total.list_nodo.push_front(_nodo) ;
      int aparicion = 1 ;
      string      palabra ;
-     palabra = lee (fichero) ;
+     istringstream plano( limpiar_html(fichero) ) ;
+     palabra = lee (plano) ;
      palabra = minusculas( palabra.c_str() ) ;
-     while ( ( not fichero.eof() ) and  palabra != SALIR ) {
+     while ( ( not plano.eof() ) and  palabra != SALIR ) {
        read_word++ ;
        //cout <<"[" << palabra << "]" ;
-       // para ver las palabras leidas 
+       // para ver las palabras leidas
        inserta_palabra(palabra,pag,aparicion) ;
        aparicion++ ;
-       palabra = lee (fichero) ;
+       palabra = lee (plano) ;
      }
    }
    else {
