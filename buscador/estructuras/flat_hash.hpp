@@ -1,12 +1,14 @@
 /*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
-/*@@@@   ESTRUCTURA: HASH ABIERTO CON SONDEO  LINEAL    @@@@*/
+/*@@@@@@@@@@@   ESTRUCTURA:  FLAT  HASH    @@@@@@@@@@@@@@@@@*/
 /*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
 
-// el "hash cerrado" canonico: todo en arrays planos, cero
-// punteros; hash cacheado para saltarse comparaciones
+// direccionamiento abierto, tambien llamado hash cerrado:
+// los elementos viven dentro del array (cero punteros) y la
+// colision se resuelve sondeando la celda siguiente; el hash
+// cacheado evita comparar strings en los sondeos fallidos
 
-#ifndef HASH_ABIERTO_HPP
-#define HASH_ABIERTO_HPP
+#ifndef FLAT_HASH_HPP
+#define FLAT_HASH_HPP
 
 #include     <string>
 #include    <cstddef>
@@ -15,7 +17,7 @@ using std::string;
 
 int f_hash(const string&) ; // definida en estructura_datos.cpp
 
-class OpenAddr
+class FlatHash
 {
  private:
   /*/ elementos /*/
@@ -27,7 +29,7 @@ class OpenAddr
 
  public:
   /*/ operaciones /*/
-  OpenAddr(int t) : tama(t) {
+  FlatHash(int t) : tama(t) {
     claves = new string[t]   ;
     val    = new int[t]      ;
     hcache = new unsigned[t] ;

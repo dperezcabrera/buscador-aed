@@ -47,7 +47,7 @@ cada tanda (maquina con ruido de fondo: los ratios son lo fiable):
 
 | Estructura | Memoria | insert | hit | miss | scan orden | erase |
 |---|---|---|---|---|---|---|
-| Abierto (sondeo lineal) | 62 MB | 293 | 774 | 190 | — | 231 |
+| Flat hash (sondeo lineal) | 62 MB | 293 | 774 | 190 | — | 231 |
 | Hash clasico (encadenado) | 92 MB | 351 | 744 | 531 | — | 297 |
 | close_hash (2004, arreglada) | 122 MB | 407 | 833 | 600 | — | 318 |
 | Bloom (2 MB) + clasico | 94 MB | 476 | 1.112 | 205 | — | 270 |

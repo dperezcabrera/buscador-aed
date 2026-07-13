@@ -9,7 +9,7 @@
 using namespace std::chrono;
 
 #include "estructuras/hash_clasico.hpp"
-#include "estructuras/hash_abierto.hpp"
+#include "estructuras/flat_hash.hpp"
 #include "estructuras/bloom_hash.hpp"
 #include "estructuras/trie.hpp"
 #include "estructuras/radix.hpp"
@@ -65,7 +65,7 @@ int main(int argc, char** argv){
   claves.reserve(N); ajenas.reserve(N);
   for (int i=0;i<N;i++){ claves.push_back("palabra" + std::to_string((long)i*7919%N) + "x" + std::to_string(i));
                          ajenas.push_back("ausente" + std::to_string(i)); }
-  if      (cual=="oa") mide("abierto", new OpenAddr(1<<21), claves, ajenas, N, REP);
+  if      (cual=="oa") mide("flat_h ", new FlatHash(1<<21), claves, ajenas, N, REP);
   else if (cual=="rx") mide("radix  ", new Radix(),   claves, ajenas, N, REP);
   else if (cual=="tr") mide("trie   ", new Trie(),    claves, ajenas, N, REP);
   else if (cual=="bl") mide("bloom+h", new BloomHash(CUBETAS), claves, ajenas, N, REP);
