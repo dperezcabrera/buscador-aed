@@ -21,10 +21,13 @@ test: $(wildcard *.cpp *.hpp)
 	$(CXX) $(CXXFLAGS) -o test_buscador test.cpp
 	./test_buscador
 
-clean:
-	rm -f Buscador test_buscador
+bench: $(wildcard *.cpp *.hpp)
+	$(CXX) $(CXXFLAGS) -o bench_estructuras bench_estructuras.cpp
 
-.PHONY: clean test
+clean:
+	rm -f Buscador test_buscador bench_estructuras
+
+.PHONY: clean test bench
 
 #  $Id: makefile
 #  v 1.0 30/07/2004 18:51:30

@@ -17,7 +17,7 @@
 
 
 /*/  Funcion hash /*/
-int f_hash(string palabra) {
+int f_hash(const string& palabra) {
 
   int resultado = 0 ;
   int i = 0 ;
@@ -32,7 +32,7 @@ int f_hash(string palabra) {
 }
 
 /*/ funcion hash2 basada en f_hash /*/
-int f_hash2( Pagina * pag) {
+int f_hash2( Pagina* const& pag) {
 
    string s = pag->nom_fich ;
    return       f_hash( s ) ;
@@ -728,8 +728,7 @@ void Contenedor::inserta_pagina(string& pal,Pagina* pag ) {
      (*lista).push_front(pal) ;
    }
    else {
-     cerr << alert << "ERROR : en  inserta_pag "<< endl ;
-     exit(1);
+     assert( lista != NULL ) ; // toda pagina viva esta en tabla_pag
    }
 }
 
@@ -994,12 +993,8 @@ void Contenedor::inserta_nueva(string url,string nombre_fich_pagina,int relevanc
      Pagina *pag = new Pagina(url,nombre_fich_pagina,relevancia,web_leidas) ;
      list<string> lista_nueva ;
       
-     if ( not tabla_pag.insert(pag, lista_nueva ) ) { 
-       cerr << alert 
-	    <<" ERROR: en close_hash<T,key>::insert()" 
-	    << endl ;
-       exit(1);
-     }
+     bool insertada = tabla_pag.insert(pag, lista_nueva ) ;
+     assert( insertada ) ; // pagina nueva: no puede estar repetida
      Nodo _nodo(pag);
      list_dat_total.list_nodo.push_front(_nodo) ;
      int aparicion = 1 ;
@@ -1093,18 +1088,14 @@ void Contenedor::borrar_pagina(Pagina* pag) {
 	  (*l).list_nodo.erase(j);
 	}
 	else {
-	  cerr << alert <<"ERROR: durante la carga"
-	       << endl << endl ;
-	  exit(1);
+	  assert( j != j_end ) ; // el indice debe contener la pagina
 	}
 	if ( (*l).Size() == 0 ) {
 	  tabla_palabras.erase(*i);
 	}
       }
       else {
-	cerr << alert <<"ERROR: durante la carga"
-	     << endl << endl ;
-	exit(1);
+	assert( l != NULL ) ; // toda palabra de la pagina esta indexada
       }
       i++ ;
     }

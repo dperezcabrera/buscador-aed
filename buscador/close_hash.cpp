@@ -6,6 +6,7 @@
 #define  __CLOSE_HASH_CPP
 
 #include       <iostream>
+#include       <assert.h>
 
 #include "close_hash.hpp"
 #include     "screen.cpp"
@@ -33,9 +34,13 @@ close_hash<T,key>::close_hash(const int i , funcion_hash f_h) {
       siguientes[i-1] = -1 ;
   }
   else {
-    cerr << alert << "ERROR: parametro del constructor incorrecto" 
-	 << endl ;
-    exit(1) ;
+    assert( i > 0 ) ; // contrato: tamaño positivo
+    tama = 0 ;
+    indices = siguientes = NULL ;
+    elementos = NULL ;
+    claves    = NULL ;
+    num_elementos = 0 ;
+    gestor_vacios =-1 ;
   }
 }
 
@@ -87,9 +92,13 @@ void close_hash<T,key>::init(const int i, funcion_hash f_h) {
       siguientes[i-1] = -1 ;
   }	  
   else {
-    cerr << alert << "ERROR: parametro del constructor incorrecto"
-	 << endl ;
-    exit(1) ;
+    assert( i > 0 ) ; // contrato: tamaño positivo
+    tama = 0 ;
+    indices = siguientes = NULL ;
+    elementos = NULL ;
+    claves    = NULL ;
+    num_elementos = 0 ;
+    gestor_vacios =-1 ;
   }
 }
 
@@ -167,7 +176,7 @@ int close_hash<T,key>::size(){
 
 template<class T,class key>
 // insertra un elemento con su clave
-bool close_hash<T,key>::insert(const key clav,const T &dato) {
+bool close_hash<T,key>::insert(const key& clav,const T &dato) {
   
   if ( tama > 0 ) {
     T   *p = new T   ;
@@ -178,9 +187,8 @@ bool close_hash<T,key>::insert(const key clav,const T &dato) {
     return (*this).inserta(c,p) ;
   }
   else {
-    cerr << alert << "ERROR: elemento del tipo close_hash "
-	 << "destruido " << endl ;
-    exit(1);
+    assert( tama > 0 ) ; // uso tras destruccion
+    return false ;
   }
 }
 
@@ -194,9 +202,8 @@ bool close_hash<T,key>::inserta( key *clav, T* dato) {
     
     //cout << " entra " << endl ;
     int indice_inicial = f_hash(*clav) % tama ;
-    if (indice_inicial < 0 ) {
-      cerr << alert << "ERROR: en definicion de funcion hash" << endl;
-      exit(1);
+    if (indice_inicial < 0 ) { // hash negativo: normalizar
+      indice_inicial += tama ;
     }
     
     int j = indices[indice_inicial] ;
@@ -213,10 +220,7 @@ bool close_hash<T,key>::inserta( key *clav, T* dato) {
       claves[j]       =    clav ;
       elementos[j]    =    dato ;
       siguientes[j]   =   j_end ;
-      if ( ( gestor_vacios < -1 ) or ( gestor_vacios >= tama ) ) {
-	cerr <<"ERROR: en inserta" << endl ;
-	exit(1);
-      }
+      assert( ( gestor_vacios >= -1 ) and ( gestor_vacios < tama ) ) ;
       return true;
     }
     else {
@@ -228,18 +232,20 @@ bool close_hash<T,key>::inserta( key *clav, T* dato) {
 	clave = claves[j] ;
       }
       if ( (*clave) == (*clav) ) {
-	
+
 	//cout << " caso 2 " << endl ;
-	if ( ( gestor_vacios < -1 ) or ( gestor_vacios >= tama ) ) {
-	  cerr <<"ERROR: en inserta" << endl ;
-	  exit(1);
-	}
+	assert( ( gestor_vacios >= -1 ) and ( gestor_vacios < tama ) ) ;
+	delete clav ; // clave duplicada: liberar las copias
+	delete dato ; // que insert() habia reservado
 	return false ;
       }
       else {
 	// inserta en la primera posicion de la lista
-	if ( anterior == indice_inicial ) {
-	  
+	// solo si la clave nueva va antes que la cabeza;
+	// si el bucle no avanzo por fin-de-cadena (un solo
+	// nodo menor), toca insertar detras: caso 4
+	if ( ( anterior == indice_inicial ) and ( (*clav) < (*clave) ) ) {
+
 	  //cout << " caso 3 " << endl;
 	  int    aux = indices[anterior] ;
 	  indices[anterior] = gestor_vacios ;
@@ -249,10 +255,7 @@ bool close_hash<T,key>::inserta( key *clav, T* dato) {
 	  elementos [i] = dato ;
 	  claves[i]     = clav ;
 	  num_elementos++;
-	  if ( ( gestor_vacios < -1 ) or ( gestor_vacios >= tama ) ) {
-	    cerr <<"ERROR: en inserta" << endl ;
-	    exit(1);
-	  }
+	  assert( ( gestor_vacios >= -1 ) and ( gestor_vacios < tama ) ) ;
 	  return true ;
 	}
 	else {
@@ -275,10 +278,7 @@ bool close_hash<T,key>::inserta( key *clav, T* dato) {
 	  elementos[i]  =          dato ;
 	  claves[i]     =          clav ;
 	  num_elementos++;
-	  if ( ( gestor_vacios < -1 ) or ( gestor_vacios >= tama ) ) {
-	    cerr <<"ERROR: en inserta" << endl ;
-	    exit(1);
-	  }
+	  assert( ( gestor_vacios >= -1 ) and ( gestor_vacios < tama ) ) ;
 	  return true ;
 	}
       }
@@ -294,15 +294,14 @@ bool close_hash<T,key>::inserta( key *clav, T* dato) {
 
 template<class T,class key>
 // borra un elemento si existe
-bool close_hash<T,key>::erase(const key clav) {
+bool close_hash<T,key>::erase(const key& clav) {
 
   if ( tama > 0 ) {
     int indice_inicial = f_hash(clav) % tama ;
-    int anterior = indice_inicial ;
-    if (indice_inicial < 0 ) {
-      cerr << alert << "ERROR: en definicion de funcion hash" << endl;
-      exit(1);
+    if (indice_inicial < 0 ) { // hash negativo: normalizar
+      indice_inicial += tama ;
     }
+    int anterior = indice_inicial ;
     int j = indices[indice_inicial] ;
     int j_end = -1 ;
     if ( j != j_end ) {
@@ -322,10 +321,7 @@ bool close_hash<T,key>::erase(const key clav) {
 	  elementos[j]  =  NULL ;
 	  delete  ( claves[j] ) ;
 	  claves[j]     =  NULL ;
-	  if ( ( gestor_vacios < -1 ) or ( gestor_vacios >= tama ) ) {
-	    cerr <<"ERROR: en erase" << endl ;
-	    exit(1);
-	  }
+	  assert( ( gestor_vacios >= -1 ) and ( gestor_vacios < tama ) ) ;
 	  return true ;
 	}
 	else {
@@ -337,46 +333,37 @@ bool close_hash<T,key>::erase(const key clav) {
 	  elementos[j]  =  NULL ;
 	  delete  ( claves[j] ) ;
 	  claves[j]     =  NULL ;
-	  if ( ( gestor_vacios < -1 ) or ( gestor_vacios >= tama ) ) {
-	    cerr <<"ERROR: en erase" << endl ;
-	    exit(1);
-	  }
+	  assert( ( gestor_vacios >= -1 ) and ( gestor_vacios < tama ) ) ;
 	  return true ;
 	}
       }
       else {
-	if ( ( gestor_vacios < -1 ) or ( gestor_vacios >= tama ) ) {
-	  cerr <<"ERROR: en erase" << endl ;
-	  exit(1);
-	}
+	assert( ( gestor_vacios >= -1 ) and ( gestor_vacios < tama ) ) ;
 	return false ;
       }
     }
     return false ; // lista vacia: la clave no estaba
   }
   else {
-    cerr << alert << "ERROR: elemento del tipo close_hash "
-	 << "destruido " << endl ;
-    exit(1);
+    assert( tama > 0 ) ; // uso tras destruccion
+    return false ;
   }
 }
 
 template<class T, class key>
 // busca un elemento si existe
 // si no devuelve NULL
-T* close_hash<T,key>::search(const key clav) {
+T* close_hash<T,key>::search(const key& clav) {
   
   if ( tama <= 0 ) {
-    cerr << alert << "ERROR: elemento del tipo close_hash "
-	 << "destruido " << endl ;
-    exit(1);
+    assert( tama > 0 ) ; // uso tras destruccion
+    return NULL ;
   }
   int indice_inicial = (f_hash(clav) % tama) ;
-  int anterior = indice_inicial ;
-  if (indice_inicial < 0 ) {
-    cerr << alert << "ERROR: en definicion de funcion hash" << endl;
-    exit(1);
+  if (indice_inicial < 0 ) { // hash negativo: normalizar
+    indice_inicial += tama ;
   }
+  int anterior = indice_inicial ;
   int j = indices[indice_inicial] ;
   int j_end = -1 ;
   if ( j != j_end ) {
@@ -427,9 +414,8 @@ bool close_hash<T,key>::front (key*& clav, T*& elem) {
     }
   }
   else {
-    cerr << alert << "ERROR: elemento del tipo close_hash "
-	 << "destruido " << endl ;
-    exit(1);
+    assert( tama > 0 ) ; // uso tras destruccion
+    return false ;
   }
 }
 
@@ -466,9 +452,8 @@ bool close_hash<T,key>::pop_front() {
     }
   }
   else {
-    cerr << alert << "ERROR: elemento del tipo close_hash "
-	 << "destruido " << endl ;
-    exit(1);
+    assert( tama > 0 ) ; // uso tras destruccion
+    return false ;
   }
 }
 
@@ -525,7 +510,14 @@ void close_hash<T,key>::resize   (const int porcentage) {
 
       close_hash<T,key> ampliada( ((tama*porcentage )/100),f_hash) ;
       ampliada.asign( *this ) ;
+      // el dren de asign dejo los arrays viejos sin
+      // contenido (todo NULL): liberarlos antes de pisarlos
+      delete[] elementos ;
+      delete[] indices ;
+      delete[] siguientes ;
+      delete[] claves ;
       tama          =          ampliada.tama ;
+      num_elementos = ampliada.num_elementos ;
       elementos     =     ampliada.elementos ;
       ampliada.elementos        =       NULL ;
       indices       =       ampliada.indices ;
@@ -535,6 +527,7 @@ void close_hash<T,key>::resize   (const int porcentage) {
       claves        =        ampliada.claves ;
       ampliada.claves           =       NULL ;
       gestor_vacios = ampliada.gestor_vacios ;
+      ampliada.tama = 0 ;
     }
     else {
       (*this).clear() ;
@@ -555,9 +548,8 @@ bool close_hash<T,key>::asign(close_hash<T,key>& fuente) {
     return true ;
   }
   else {
-    cerr << alert << "ERROR: elemento del tipo close_hash "
-	 << "destruido " << endl ;
-    exit(1);
+    assert( fuente.tama > 0 ) ; // fuente destruida
+    return false ;
   }
 }
 
@@ -594,9 +586,7 @@ void close_hash<T,key>::for_each (accion hacer,void *datos) {
     }
   }
   else {
-    cerr << alert << "ERROR: elemento del tipo close_hash "
-	 << "destruido " << endl ;
-    exit(1);
+    assert( tama > 0 ) ; // uso tras destruccion
   }
 }
 

@@ -22,7 +22,7 @@
 
 using namespace std;
 
-int f_hash(string) ;
+int f_hash(const string&) ;
 typedef void(*CargaDatos)
   (string&,string&,int&,std::ifstream&,std::ifstream&,string&);
 
@@ -60,7 +60,7 @@ class Pagina
   } 
 };
 
-int f_hash2  (Pagina* pag ) ;
+int f_hash2  (Pagina* const& pag ) ;
 
 /*##########################################################*/
 /*#################   DEFINICION DE NODO   #################*/

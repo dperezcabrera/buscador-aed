@@ -24,6 +24,22 @@ int main() {
   assert(  h.search(string("hola"))  == NULL ) ;
   assert( *h.search(string("adios")) == 2 ) ;
 
+  /*/ crecimiento automatico: resize al llenarse /*/
+  close_hash<int,string> chica(4,f_hash) ;
+  for ( int n = 0 ; n < 20 ; n++ ) {
+    ostringstream clave ;
+    clave << "clave" << n ;
+    chica.insert( clave.str() , n ) ;
+  }
+  assert( chica.size() == 20 ) ; // el contador sobrevive al resize
+  for ( int n = 0 ; n < 20 ; n++ ) {
+    ostringstream clave ;
+    clave << "clave" << n ;
+    assert( *chica.search( clave.str() ) == n ) ;
+  }
+  assert( not chica.insert( string("clave7") , 99 ) ) ; // duplicado
+  assert( chica.size() == 20 ) ;
+
   /*/ minusculas: quita tildes latin-1 y baja a minuscula /*/
   assert( minusculas("HoLa")       == "hola"   ) ;
   assert( minusculas("cami\xf3n")  == "camion" ) ; // camión

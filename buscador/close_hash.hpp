@@ -12,7 +12,7 @@ class close_hash
 public:
 
    /*/ defino un tipo de funcion /*/
-  typedef int(*funcion_hash)(const key) ;
+  typedef int(*funcion_hash)(const key&) ;
   typedef void(accion)(T&,void*&);
 
 private:
@@ -46,10 +46,10 @@ public:
 
   void init(const int , funcion_hash ) ; // &
   void for_each (accion,void*)         ; // &
-  bool insert   (const key,const T& )  ; // &
-  bool erase    (const key)            ; // &
+  bool insert   (const key&,const T& ) ; // &
+  bool erase    (const key&)           ; // &
 
-  T*   search   (const key)            ; // &
+  T*   search   (const key&)           ; // &
   void clear    (  )                   ; // &
   int  size     (  )                   ; // &
   int  size_of  (  )                   ; // &
