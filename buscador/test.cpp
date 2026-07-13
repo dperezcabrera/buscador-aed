@@ -9,7 +9,6 @@
 
 #include "estructuras/hash_clasico.hpp"
 #include "estructuras/flat_hash.hpp"
-#include "estructuras/bloom_hash.hpp"
 #include "estructuras/trie.hpp"
 #include "estructuras/radix.hpp"
 #include "estructuras/avl.hpp"
@@ -19,10 +18,10 @@
 
 #include <cassert>
 
-/*/ tortura de borrado: inserta n, borra pares, verifica,  /*/
+/*/ prueba de borrado: inserta n, borra pares, verifica,   /*/
 /*/ borra impares, verifica vacio, reinserta               /*/
 template<class Tabla>
-void tortura(Tabla* t, int n) {
+void prueba_borrado(Tabla* t, int n) {
 
   for( int i = 0 ; i < n ; i++ )
     assert( t->insert( "clave" + std::to_string(i), i ) ) ;
@@ -63,20 +62,20 @@ int main() {
   assert( *h.search(string("adios")) == 2 ) ;
 
   /*/ crecimiento automatico: resize al llenarse /*/
-  close_hash<int,string> chica(4,f_hash) ;
+  close_hash<int,string> pequena(4,f_hash) ;
   for ( int n = 0 ; n < 20 ; n++ ) {
     ostringstream clave ;
     clave << "clave" << n ;
-    chica.insert( clave.str() , n ) ;
+    pequena.insert( clave.str() , n ) ;
   }
-  assert( chica.size() == 20 ) ; // el contador sobrevive al resize
+  assert( pequena.size() == 20 ) ; // el contador sobrevive al resize
   for ( int n = 0 ; n < 20 ; n++ ) {
     ostringstream clave ;
     clave << "clave" << n ;
-    assert( *chica.search( clave.str() ) == n ) ;
+    assert( *pequena.search( clave.str() ) == n ) ;
   }
-  assert( not chica.insert( string("clave7") , 99 ) ) ; // duplicado
-  assert( chica.size() == 20 ) ;
+  assert( not pequena.insert( string("clave7") , 99 ) ) ; // duplicado
+  assert( pequena.size() == 20 ) ;
 
   /*/ minusculas: quita tildes latin-1 y baja a minuscula /*/
   assert( minusculas("HoLa")       == "hola"   ) ;
@@ -104,15 +103,16 @@ int main() {
 
   /*/ borrado completo en las estructuras del benchmark /*/
   const int N = 20000 ;
-  tortura( new ClassicHash(4096), N ) ;
-  tortura( new FlatHash(1<<16),   N ) ;
-  tortura( new BloomHash(4096),   N ) ;
-  tortura( new Trie(),            N ) ;
-  tortura( new Radix(),           N ) ;
-  tortura( new AVL(),             N ) ;
-  tortura( new BTree(),           N ) ;
-  tortura( new BStar(),           N ) ;
-  tortura( new BPlus(),           N ) ;
+  prueba_borrado( new ClassicHash(4096), N ) ;
+  prueba_borrado( new ClassicHash(8),    N ) ; // fuerza varios crecimientos
+  prueba_borrado( new FlatHash(1<<16),   N ) ;
+  prueba_borrado( new FlatHash(8),       N ) ; // fuerza varios crecimientos con purga de vacios
+  prueba_borrado( new Trie(),            N ) ;
+  prueba_borrado( new Radix(),           N ) ;
+  prueba_borrado( new AVL(),             N ) ;
+  prueba_borrado( new BTree(),           N ) ;
+  prueba_borrado( new BStar(),           N ) ;
+  prueba_borrado( new BPlus(),           N ) ;
 
   cout << "OK: todas las comprobaciones pasan" << endl ;
   return 0 ;

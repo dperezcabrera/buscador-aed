@@ -4,11 +4,10 @@ Practica de Algoritmos y Estructuras de Datos (Universidad de Murcia,
 curso 2003/2004, 2 de ITI de Gestion): un buscador de paginas web con
 indice invertido posicional, tabla hash propia y ranking por relevancia.
 
-Restaurada y modernizada en 2026: fugas de memoria y UB eliminados
-(ASan/LSan limpio), un bug de perdida de claves en la tabla hash que
-llevaba oculto desde 2004, parser HTML, algoritmos de carga y consulta
-optimizados, tests y benchmark. El diseño y las correcciones estan
-detallados en [buscador/DISENO.md](buscador/DISENO.md).
+Restaurada y modernizada en 2026: correccion de bugs y fugas de memoria,
+parser HTML, algoritmos de carga y consulta optimizados, tests y
+benchmark. El diseño y el detalle de las correcciones estan en
+[buscador/DISENO.md](buscador/DISENO.md).
 
 ## Uso
 
@@ -28,38 +27,46 @@ fichero maestro que consume `LOAD`.
 Rendimiento del buscador (2000 paginas, 1,2M palabras): carga ~0,5 s,
 consultas 0-9 ms.
 
-## Benchmark: la tabla hash contra nueve alternativas
+## Benchmark: la tabla hash contra ocho alternativas
 
 `buscador/bench_estructuras.cpp` compara la `close_hash` de la practica
-con nueve estructuras de firma identica (`insert`/`search`/`erase` sobre
+con ocho estructuras de firma identica (`insert`/`search`/`erase` sobre
 `string → int`), todas artesanales: 1M de claves, 3M de busquedas por
-fase, verificacion por checksums (las diez devuelven exactamente los
+fase, verificacion por checksums (las nueve devuelven exactamente los
 mismos resultados). Las implementaciones estan en
 [buscador/estructuras/](buscador/estructuras/), una por fichero.
 
 ```
-./bench_estructuras ch|cl|oa|bl|tr|rx|av|btn|bp|bs
+./bench_estructuras ch|cl|oa|tr|rx|av|btn|bp|bs
 ```
 
-Minimos de 3 rondas alternadas en la misma tanda:
+Minimos de 3 rondas alternadas en la misma tanda. Todas las estructuras
+arrancan vacias y crecen dinamicamente — los hashes desde 1.024 celdas,
+con 10 o mas duplicaciones por el camino:
 
 | Estructura | Memoria | insercion | acierto | fallo | recorrido en orden | borrado |
 |---|---:|---:|---:|---:|---:|---:|
-| **close_hash (la practica — referencia)** | 122 MB | 559 ms | 1.262 ms | 871 ms | — | 364 ms |
-| Flat hash (sondeo lineal) | 61 MB | 375 ms | 672 ms | 176 ms | — | 235 ms |
-| Hash clasico (encadenado) | 91 MB | 467 ms | 1.039 ms | 580 ms | — | 307 ms |
-| Radix trie (Patricia) | 67 MB | 586 ms | 2.136 ms | 9 ms* | — | 614 ms |
-| Trie plano | 240 MB | 1.790 ms | 3.578 ms | 9 ms* | — | 612 ms |
-| AVL | 106 MB | 716 ms | 1.361 ms | 289 ms | 27 ms | 797 ms |
-| Arbol B (G=32) | 104 MB | 1.194 ms | 3.173 ms | 366 ms | 6 ms | 1.320 ms |
-| Arbol B+ | 109 MB | 1.291 ms | 3.837 ms | 365 ms | 5 ms | 1.628 ms |
-| Arbol B* | 97 MB | 1.435 ms | 3.314 ms | 312 ms | 5 ms | 1.293 ms |
+| **close_hash (la practica — referencia)** | 146 MB | 699 ms | 1.047 ms | 783 ms | — | 321 ms |
+| Flat hash (sondeo lineal) | 127 MB | 394 ms | 664 ms | 173 ms | — | 248 ms |
+| Hash clasico (encadenado) | 99 MB | 529 ms | 696 ms | 659 ms | — | 244 ms |
+| Radix trie (Patricia) | 67 MB | 602 ms | 2.280 ms | 10 ms* | — | 682 ms |
+| Trie plano | 240 MB | 1.572 ms | 3.693 ms | 9 ms* | — | 641 ms |
+| AVL | 106 MB | 880 ms | 1.417 ms | 241 ms | 34 ms | 800 ms |
+| Arbol B (G=32) | 104 MB | 1.152 ms | 4.272 ms | 386 ms | 6 ms | 1.460 ms |
+| Arbol B+ | 109 MB | 1.377 ms | 4.528 ms | 402 ms | 6 ms | 1.816 ms |
+| Arbol B* | 97 MB | 1.535 ms | 3.855 ms | 371 ms | 6 ms | 1.525 ms |
 
 El borrado es completo en todas (rebalanceo en el AVL, prestamo y fusion
 de nodos en los arboles B, poda de ramas en los tries) salvo en el flat
-hash, que usa tumbas: lo canonico en direccionamiento abierto. `*` fallo
-de trie/radix dependiente del corpus (las claves ausentes divergen
-pronto).
+hash, que marca la celda como vacia y la reutiliza o purga al crecer:
+lo canonico en direccionamiento abierto. `*` fallo de trie/radix
+dependiente del corpus (las claves ausentes divergen pronto).
+
+Prealocando los hashes al tamaño final (`./bench_estructuras oa` sin
+capacidad inicial) ahorran insercion — close_hash 482 ms, clasico
+405 ms, flat sin cambio apreciable — y sobre todo memoria: flat 61 MB,
+clasico 91 MB, close_hash 122 MB. La diferencia de memoria no es
+estructura viva sino retencion del allocator tras los crecimientos.
 
 ### Conclusiones
 
@@ -70,18 +77,12 @@ pronto).
   mejor memoria de la tabla, y fallos 3-4 veces mas rapidos que los
   encadenados (una celda vacia responde sin comparar strings). Es la
   razon de que los hashes planos (Swiss tables) dominen hoy.
-- **La close_hash queda a un 10-20% del clasico** tras las correcciones
-  (partia de un 50% de desventaja por firmas por valor, y de perder
-  claves por el bug del caso 3). Es la unica de la tabla con factor de
-  carga <= 1 garantizado por construccion.
+- **La close_hash queda a un 30-50% del clasico creciendo, y a un
+  10-20% prealocada** tras las correcciones. Su resize es el mas caro de
+  los tres: re-inserta cada clave recalculando el hash.
 - **La compresion de caminos transforma el trie**: de 240 MB a 67 MB y casi
   el doble de velocidad, conservando el fallo instantaneo y la busqueda
   por prefijo, que ningun hash puede ofrecer.
-- **El Bloom filter no compite: complementa** (por eso no esta en la
-  tabla). Un filtro de 2 MB delante del hash clasico baja su fallo de
-  580 ms a 259 ms a cambio de un 50% mas en los aciertos: rentable
-  cuando dominan los fallos (el truco de las LSM y las caches). Esta
-  implementado y medible con `./bench_estructuras bl`.
 - **Los arboles B ganan en recorrido ordenado** (5-6 ms el recorrido
   completo, 5 veces mas rapido que el AVL) y el AVL en busqueda puntual
   ordenada; el B+ es lo que usan las bases de datos porque su ventaja

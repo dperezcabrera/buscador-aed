@@ -39,7 +39,7 @@ cuatro arrays paralelos (`indices` por cubeta, `siguientes` como enlaces,
 Generica por plantilla y con la funcion hash inyectada por puntero a
 funcion — inversion de dependencias antes de conocer el nombre. Las cadenas
 se mantienen ordenadas por clave, lo que permite cortar la busqueda al
-pasarse. Sin rehash: si se llena, el insert falla (techo asumido).
+pasarse. Al llenarse duplica la tabla (`resize`) y recoloca los elementos.
 
 Dos instancias:
 - `tabla_palabras`: palabra → `Lista_datos` (el indice invertido).
@@ -151,7 +151,9 @@ Medido (2000 paginas, 1,2M palabras, 2026): carga ~0,5 s; consultas 0-9 ms.
   mas valor de error; la biblioteca ya no mata el proceso del cliente.
 - Rendimiento: `inserta_pagina` de O(w2) a O(w); consultas sin copias
   (`Search` devuelve puntero al indice); firmas `const key&` en la tabla
-  y en las funciones hash (~2x carga, 3-8x consulta en total).
+  y en las funciones hash (~2x carga, 3-8x consulta en total); el dren
+  del `resize` de O(tama^2) a O(n) — `front()` rescaneaba las cubetas
+  desde cero en cada extraccion.
 - Robustez: EOF sin QUIT ya no deja el proceso girando al 100% de CPU;
   fuentes convertidas a UTF-8 (los datos siguen en latin-1, con escapes
   `\x` documentados); Makefile con dependencias reales, `make test` y
@@ -161,8 +163,8 @@ Medido (2000 paginas, 1,2M palabras, 2026): carga ~0,5 s; consultas 0-9 ms.
 
 ## 8. Benchmark de estructuras
 
-`bench_estructuras.cpp` (`make bench`) compara la `close_hash` con nueve
+`bench_estructuras.cpp` (`make bench`) compara la `close_hash` con ocho
 estructuras alternativas de firma identica (`insert`/`search`/`erase`
-sobre `string → int`): hash encadenado clasico, direccionamiento abierto,
-Bloom+hash, trie, radix trie, AVL, y arboles B, B+ y B*. Resultados y
-conclusiones en el README del repo.
+sobre `string → int`): hash encadenado clasico, flat hash, trie, radix
+trie, AVL, y arboles B, B+ y B*. Resultados y conclusiones en el README
+del repo.

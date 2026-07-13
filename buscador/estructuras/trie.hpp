@@ -61,10 +61,22 @@ class Trie
     return hecho and ( p->hijo == NULL ) and ( not p->tiene ) ;
   }
 
+  void libera(NodoT* p) {
+    if ( not p )
+      return ;
+    libera(p->hijo) ;
+    libera(p->hermano) ;
+    delete p ;
+  }
+
  public:
   /*/ operaciones /*/
   Trie() {
     raiz = new NodoT{0,false,0,NULL,NULL} ;
+  }
+
+  ~Trie() {
+    libera(raiz) ;
   }
 
   bool insert(const string& k, int v) {

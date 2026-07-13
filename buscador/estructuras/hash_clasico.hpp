@@ -26,6 +26,7 @@ class ClassicHash
   /*/ elementos /*/
   NodoC** cubetas ;
   int        tama ;
+  long      elems ;
 
   /*/ operaciones /*/
   int idx(const string& k) {
@@ -33,10 +34,36 @@ class ClassicHash
     return h < 0 ? h + tama : h ;
   }
 
+  void crece() { // duplica las cubetas y re-enlaza los nodos
+    int    viejo_tama = tama ;
+    NodoC** vc = cubetas ;
+    tama *= 2 ;
+    cubetas = new NodoC*[tama]() ;
+    for( int i = 0 ; i < viejo_tama ; i++ )
+      for( NodoC* p = vc[i] ; p ; ) {
+	NodoC* s = p->sig ;
+	int h = idx(p->clave) ;
+	p->sig = cubetas[h] ;
+	cubetas[h] = p ;
+	p = s ;
+      }
+    delete[] vc ;
+  }
+
  public:
   /*/ operaciones /*/
-  ClassicHash(int n) : tama(n) {
+  ClassicHash(int n) : tama(n), elems(0) {
     cubetas = new NodoC*[n]() ;
+  }
+
+  ~ClassicHash() {
+    for( int i = 0 ; i < tama ; i++ )
+      for( NodoC* p = cubetas[i] ; p ; ) {
+	NodoC* s = p->sig ;
+	delete p ;
+	p = s ;
+      }
+    delete[] cubetas ;
   }
 
   bool insert(const string& k,int v) {
@@ -45,6 +72,9 @@ class ClassicHash
       if ( p->clave == k )
 	return false ;
     cubetas[h] = new NodoC{k,v,cubetas[h]} ;
+    elems++ ;
+    if ( elems > tama ) // factor de carga <= 1
+      crece() ;
     return true ;
   }
 
@@ -62,6 +92,7 @@ class ClassicHash
 	NodoC* m = *pp ;
 	*pp = m->sig ;
 	delete m ;
+	elems-- ;
 	return true ;
       }
     return false ;

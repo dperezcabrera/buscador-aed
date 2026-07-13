@@ -1,7 +1,7 @@
 // benchmark de estructuras de datos con firma comun:
 //   insert(const string&,int) / search->int* / erase->bool / scan->long
 // las implementaciones viven en estructuras/, una por fichero
-// uso: ./bench_estructuras ch|cl|oa|bl|tr|rx|av|btn|bp|bs
+// uso: ./bench_estructuras ch|cl|oa|tr|rx|av|btn|bp|bs
 #include "estructura_datos.cpp"
 #include <chrono>
 #include <vector>
@@ -10,7 +10,6 @@ using namespace std::chrono;
 
 #include "estructuras/hash_clasico.hpp"
 #include "estructuras/flat_hash.hpp"
-#include "estructuras/bloom_hash.hpp"
 #include "estructuras/trie.hpp"
 #include "estructuras/radix.hpp"
 #include "estructuras/avl.hpp"
@@ -61,16 +60,16 @@ void mide(const char* nombre, Tabla* t, std::vector<string>& claves, std::vector
 int main(int argc, char** argv){
   const int N = 1000000, CUBETAS = 1<<20, REP = 3;
   string cual = argc>1? argv[1] : "cl";
+  int cap = argc>2? atoi(argv[2]) : 0; // capacidad inicial opcional (fuerza crecimientos)
   std::vector<string> claves, ajenas;
   claves.reserve(N); ajenas.reserve(N);
   for (int i=0;i<N;i++){ claves.push_back("palabra" + std::to_string((long)i*7919%N) + "x" + std::to_string(i));
                          ajenas.push_back("ausente" + std::to_string(i)); }
-  if      (cual=="oa") mide("flat_h ", new FlatHash(1<<21), claves, ajenas, N, REP);
+  if      (cual=="oa") mide("flat_h ", new FlatHash(cap? cap : 1<<21), claves, ajenas, N, REP);
   else if (cual=="rx") mide("radix  ", new Radix(),   claves, ajenas, N, REP);
   else if (cual=="tr") mide("trie   ", new Trie(),    claves, ajenas, N, REP);
-  else if (cual=="bl") mide("bloom+h", new BloomHash(CUBETAS), claves, ajenas, N, REP);
-  else if (cual=="ch") mide("closeH ", new CH(CUBETAS), claves, ajenas, N, REP);
-  else if (cual=="cl") mide("clasico", new ClassicHash(CUBETAS), claves, ajenas, N, REP);
+  else if (cual=="ch") mide("closeH ", new CH(cap? cap : CUBETAS), claves, ajenas, N, REP);
+  else if (cual=="cl") mide("clasico", new ClassicHash(cap? cap : CUBETAS), claves, ajenas, N, REP);
   else if (cual=="av") mide("avl    ", new AVL(),   claves, ajenas, N, REP);
   else if (cual=="bt" or cual=="btn"){ BTree* b=new BTree(); mide("arbolB ", b, claves, ajenas, N, REP); fprintf(stderr,"nodos B : %ld\n", b->Nodos()); }
   else if (cual=="bs") { BStar* b=new BStar(); mide("arbolB*", b, claves, ajenas, N, REP); fprintf(stderr,"nodos B*: %ld\n", b->Nodos()); }

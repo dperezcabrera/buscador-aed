@@ -80,10 +80,22 @@ class Radix
     return hecho and ( not p->tiene ) and ( p->hijo == NULL ) ;
   }
 
+  void libera(NodoR* p) {
+    if ( not p )
+      return ;
+    libera(p->hijo) ;
+    libera(p->hermano) ;
+    delete p ;
+  }
+
  public:
   /*/ operaciones /*/
   Radix() {
     raiz = new NodoR{"", false, 0, NULL, NULL} ;
+  }
+
+  ~Radix() {
+    libera(raiz) ;
   }
 
   bool insert(const string& k, int v) {

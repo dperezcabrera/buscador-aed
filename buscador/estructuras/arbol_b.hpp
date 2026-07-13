@@ -193,10 +193,21 @@ class BTree
       inorden(x->hijo[x->n]) ;
   }
 
+  void libera(NodoB* x) {
+    if ( not x->hoja )
+      for( int i = 0 ; i <= x->n ; i++ )
+	libera(x->hijo[i]) ;
+    delete x ;
+  }
+
  public:
   /*/ operaciones /*/
   BTree() : nnodos(1) {
     raiz = new NodoB() ;
+  }
+
+  virtual ~BTree() {
+    libera(raiz) ;
   }
 
   bool insert(const string& k, int v) {

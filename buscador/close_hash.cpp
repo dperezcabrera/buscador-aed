@@ -107,34 +107,8 @@ void close_hash<T,key>::init(const int i, funcion_hash f_h) {
 template<class T,class key>
 //func destructor de una tabla close_hash
 close_hash<T,key>::~close_hash() {
- 
-  if ( tama > 0 ) {
-    if ( elementos  != NULL ) {
-      for(int k = 0 ; k < tama ; k++ ) {
-	if (elementos[k] != NULL) {
-	  delete (elementos[k]) ;
-	}
-      }
-      delete[] elementos ;
-    }
-    if (  indices  != NULL ) {
-      delete[] indices ;
-    }
-    if (   claves  != NULL ) {
-      for(int k = 0 ; k < tama ; k++) {
-	if (claves[k] != NULL) {
-	  delete(claves[k]);
-	}
-      }
-      delete[] claves ;
-    }
-    if (siguientes != NULL ) {
-      delete[] siguientes ;
-    }
-    tama          = 0 ;
-    gestor_vacios = 0 ;
-    num_elementos = 0 ;
-  }
+
+  (*this).clear() ;
 }
 
 template<class T, class key>
@@ -540,11 +514,16 @@ template<class T,class key>
 bool close_hash<T,key>::asign(close_hash<T,key>& fuente) {
 
   if ( fuente.tama > 0) {
-    T *element = NULL ;
-    key  *clav = NULL ;
-    while ( fuente.front(clav,element) ) {
-      (*this).inserta(clav,element) ;
+    // recorre los slots directamente moviendo los punteros
+    // (front() rescaneaba desde 0 en cada extraccion: O(tama^2))
+    for( int k = 0 ; k < fuente.tama ; k++ ) {
+      if ( fuente.claves[k] != NULL ) {
+	(*this).inserta( fuente.claves[k], fuente.elementos[k] ) ;
+	fuente.claves[k]    = NULL ;
+	fuente.elementos[k] = NULL ;
+      }
     }
+    fuente.num_elementos = 0 ;
     return true ;
   }
   else {

@@ -218,10 +218,21 @@ class BPlus
     return x->n < G-1 ;
   }
 
+  void libera(N* x) {
+    if ( not x->hoja )
+      for( int i = 0 ; i <= x->n ; i++ )
+	libera(x->h[i]) ;
+    delete x ;
+  }
+
  public:
   /*/ operaciones /*/
   BPlus() : nnodos(1), dup(false), quitado(false) {
     raiz = new N(true) ;
+  }
+
+  ~BPlus() {
+    libera(raiz) ;
   }
 
   bool insert(const string& clave,int valor) {

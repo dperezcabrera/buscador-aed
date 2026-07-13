@@ -115,9 +115,21 @@ class AVL
     inorden(n->der) ;
   }
 
+  void libera(NodoA* n) {
+    if ( not n )
+      return ;
+    libera(n->izq) ;
+    libera(n->der) ;
+    delete n ;
+  }
+
  public:
   /*/ operaciones /*/
   AVL() : raiz(NULL) {}
+
+  ~AVL() {
+    libera(raiz) ;
+  }
 
   bool insert(const string& k,int v) {
     raiz = inserta(raiz,k,v) ;
