@@ -48,13 +48,12 @@ Minimos de 3 rondas alternadas en la misma tanda:
 | **close_hash (la practica — referencia)** | 122 MB | 559 ms | 1.262 ms | 871 ms | — | 364 ms |
 | Flat hash (sondeo lineal) | 61 MB | 375 ms | 672 ms | 176 ms | — | 235 ms |
 | Hash clasico (encadenado) | 91 MB | 467 ms | 1.039 ms | 580 ms | — | 307 ms |
-| Bloom (2 MB) + clasico | 93 MB | 614 ms | 1.546 ms | 259 ms | — | 380 ms |
 | Radix trie (Patricia) | 67 MB | 586 ms | 2.136 ms | 9 ms* | — | 614 ms |
+| Trie plano | 240 MB | 1.790 ms | 3.578 ms | 9 ms* | — | 612 ms |
 | AVL | 106 MB | 716 ms | 1.361 ms | 289 ms | 27 ms | 797 ms |
 | Arbol B (G=32) | 104 MB | 1.194 ms | 3.173 ms | 366 ms | 6 ms | 1.320 ms |
 | Arbol B+ | 109 MB | 1.291 ms | 3.837 ms | 365 ms | 5 ms | 1.628 ms |
 | Arbol B* | 97 MB | 1.435 ms | 3.314 ms | 312 ms | 5 ms | 1.293 ms |
-| Trie plano | 240 MB | 1.790 ms | 3.578 ms | 9 ms* | — | 612 ms |
 
 El borrado es completo en todas (rebalanceo en el AVL, prestamo y fusion
 de nodos en los arboles B, poda de ramas en los tries) salvo en el flat
@@ -78,9 +77,11 @@ pronto).
 - **La compresion de caminos transforma el trie**: de 240 MB a 67 MB y casi
   el doble de velocidad, conservando el fallo instantaneo y la busqueda
   por prefijo, que ningun hash puede ofrecer.
-- **Un Bloom filter de 2 MB** baja el fallo del clasico de 580 ms a 259 ms a
-  cambio de un 50% mas en los aciertos: rentable cuando dominan los
-  fallos (el truco de las LSM y las caches).
+- **El Bloom filter no compite: complementa** (por eso no esta en la
+  tabla). Un filtro de 2 MB delante del hash clasico baja su fallo de
+  580 ms a 259 ms a cambio de un 50% mas en los aciertos: rentable
+  cuando dominan los fallos (el truco de las LSM y las caches). Esta
+  implementado y medible con `./bench_estructuras bl`.
 - **Los arboles B ganan en recorrido ordenado** (5-6 ms el recorrido
   completo, 5 veces mas rapido que el AVL) y el AVL en busqueda puntual
   ordenada; el B+ es lo que usan las bases de datos porque su ventaja
