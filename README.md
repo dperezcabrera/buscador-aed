@@ -3,7 +3,6 @@
 Practica de Algoritmos y Estructuras de Datos (Universidad de Murcia,
 curso 2003/2004, 2 de ITI de Gestion): un buscador de paginas web con
 indice invertido posicional, tabla hash propia y ranking por relevancia.
-Calificacion original: sobresaliente.
 
 Restaurada y modernizada en 2026: fugas de memoria y UB eliminados
 (ASan/LSan limpio), un bug de perdida de claves en la tabla hash que
