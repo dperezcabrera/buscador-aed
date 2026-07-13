@@ -62,8 +62,8 @@ los arboles dependiente del corpus (las claves ausentes divergen pronto).
 ### Conclusiones
 
 - **Para busqueda exacta, hash** — la eleccion de la practica era la
-  correcta. Todo lo demas paga 2-4x el hit a cambio de operaciones que el
-  buscador no necesita.
+  correcta. El resto de estructuras tarda entre 2 y 4 veces mas por
+  busqueda a cambio de operaciones que el buscador no necesita.
 - **El flat hash gana la categoria**: arrays planos sin punteros, la
   mejor memoria de la tabla, y miss 3-4x mejor que los encadenados (una
   celda vacia responde sin comparar strings). Es la razon de que los
