@@ -57,8 +57,11 @@ int palabra_reservada(string pal) {
     else return OTRA; break;}
       
     case 'N':{if ( pal=="NOT"    )    {return op_not;}
-    else return OTRA; break;}        
-    default: 
+    else return OTRA; break;}
+
+    case 'X':{if ( pal=="XOR"    )    {return op_xor;}
+    else return OTRA; break;}
+    default:
       return OTRA ;
     }
 }
@@ -66,21 +69,27 @@ int palabra_reservada(string pal) {
 /*/ comando search /*/
 void search(Contenedor& T,list<string>& lista,std::ostream& out) {
    
-  list<string>::iterator j = lista.begin() ;
-  list<string>::iterator end = lista.end() ;
   int primera_palabra ;
   lista.pop_back() ;
+  /*/ las comillas llegan del tokenizador como ( COM ... ) /*/
+  if ( ( lista.size() > 0 ) and ( lista.front() == "(" ) )
+    lista.pop_front() ;
+  if ( ( lista.size() > 0 ) and ( lista.back() == ")" ) )
+    lista.pop_back() ;
+  list<string>::iterator j = lista.begin() ;
+  list<string>::iterator end = lista.end() ;
   if ( j != end ) {
     string  pal_aux = (*j) ;
     string  palabra = mayusculas( (*j).c_str() )   ;
     primera_palabra = palabra_reservada( palabra ) ;
     lista.pop_front( ) ;
-    switch ( primera_palabra ) 
+    switch ( primera_palabra )
       {
       case op_and:{ T.And(lista,out) ; break;}
       case op_or :{ T.Or (lista,out) ; break;}
       case op_not:{ T.Not(lista,out) ; break;}
       case op_com:{ T.Com(lista,out) ; break;}
+      case op_xor:{ T.Xor(lista,out) ; break;}
       default:{
 	cerr <<  alert   <<   "ERROR: argumento " 
 	     <<                           pal_aux 
@@ -271,7 +280,9 @@ void help(list<string>& lista, std::ostream& out) {
 			    <<" necesita otro comando  como puede ser"<< endl
 			    <<" AND, OR, NOT, COM  o XOR;  ademas  de"<< endl
 			    <<" una o varias  palabras  para realizar"<< endl
-			    <<" las busquedas oportunas"    << endl ; break;}
+			    <<" las busquedas oportunas;  ademas las"<< endl
+			    <<" comillas equivalen a COM, por ejemplo"<< endl
+			    <<" search 'frase exacta'"     << endl ; break;}
       case CLEAR    : { out <<"   CLEAR: ... para limpiar la pantalla" 
 			    << endl ; break;}
       case QUIT     : { out <<"   QUIT: .... para salir  del buscador" 

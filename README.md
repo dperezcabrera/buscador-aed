@@ -35,7 +35,8 @@ consultas 0-9 ms.
 con nueve estructuras de firma identica (`insert`/`search`/`erase` sobre
 `string → int`), todas artesanales: 1M de claves, 3M de busquedas por
 fase, verificacion por checksums (las diez devuelven exactamente los
-mismos resultados).
+mismos resultados). Las implementaciones estan en
+[buscador/estructuras/](buscador/estructuras/), una por fichero.
 
 ```
 ./bench_estructuras ch|cl|oa|bl|tr|rx|av|btn|bp|bs
@@ -89,6 +90,7 @@ los arboles dependiente del corpus (las claves ausentes divergen pronto).
 ## Estructura del repositorio
 
 ```
-buscador/    codigo del buscador + DISENO.md + tests + benchmark
-generador/   generador de conjuntos de prueba (codigo de los profesores)
+buscador/               codigo del buscador + DISENO.md + tests + benchmark
+buscador/estructuras/   las estructuras del benchmark, una por fichero
+generador/              generador de conjuntos de prueba (codigo de los profesores)
 ```

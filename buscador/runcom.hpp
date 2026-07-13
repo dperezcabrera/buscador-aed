@@ -25,8 +25,9 @@
 #define op_or              102
 #define op_com             104
 #define op_not             105
-#define abre_parentesis    106 
+#define abre_parentesis    106
 #define cierra_parentesis  107
+#define op_xor             108
 
 
 void runcomand

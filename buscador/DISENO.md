@@ -104,10 +104,11 @@ ordenados por rank estatico de los primeros Google.
 ### REPL
 
 `Lee_buffer` + `limpiar_linea` + `crear_lista`: separa caracteres especiales,
-troceo por espacios, y reescribe comillas a `( COM ... )` — azucar sintactico
-que en 2004 quedo a medio cablear (el parser de SEARCH no consume el `(`;
-la via operativa es `SEARCH COM`). `runcom` despacha con un switch por
-primera letra para no comparar contra todas las palabras reservadas.
+trocea por espacios, y reescribe las comillas a `( COM ... )`:
+`SEARCH 'frase exacta'` equivale a `SEARCH COM frase exacta`. `SEARCH XOR`
+devuelve las paginas que contienen un numero impar de los terminos.
+`runcom` despacha con un switch por primera letra para no comparar contra
+todas las palabras reservadas.
 
 ## 5. Instrumentacion
 

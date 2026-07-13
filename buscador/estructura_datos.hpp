@@ -205,6 +205,7 @@ public:
   void Not(list<string>& lista,std::ostream& out); // &
   void Com(list<string>& lista,std::ostream& out); // &
   void And(list<string>& lista,std::ostream& out); // &
+  void Xor(list<string>& lista,std::ostream& out); // &
 
 };
 

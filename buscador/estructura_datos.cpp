@@ -826,6 +826,52 @@ void Contenedor::Or(list<string>& lista,std::ostream& out) {
   } 
 }
 
+/*/ funcion xor /*/
+// paginas que contienen un numero impar de los terminos
+void Contenedor::Xor(list<string>& lista,std::ostream& out) {
+
+  if (cargado) {
+    list<string>::iterator j = lista.begin() ;
+    list<string>::iterator end = lista.end() ;
+
+    if ( j != end ) {
+      cronometro c ;
+      c.iniciar() ;
+      string     buscar ;
+      Lista_datos vacia ;
+      Lista_datos resultado ;
+      vacia.permitir_com = false ;
+
+      buscar = minusculas( (*j).c_str() ) ;
+      Lista_datos *actual = (*this).Search( buscar ) ;
+      if ( actual == NULL )
+	actual = &vacia ;
+      j++ ;
+      while ( j != end ) {
+	buscar = minusculas( (*j).c_str() ) ;
+	Lista_datos *p2 = (*this).Search( buscar ) ;
+	if ( p2 == NULL )
+	  p2 = &vacia ;
+	resultado = XOR( *actual, *p2 ) ;
+	actual = &resultado ;
+	j++ ;
+      }
+      c.parar();
+      out << c.milisegundos() <<" ms"<< endl;
+      (*actual).Show( out ) ;
+      out << endl ;
+    }
+    else
+      cerr << alert
+	   <<"ERROR: faltan parametros en funcion XOR"
+	   <<" consulte HELP SEARCH" << endl << endl ;
+  }
+  else {
+    cerr << alert <<"ERROR: no se ha realizado ninguna carga"
+	 << endl  << endl ;
+  }
+}
+
 /*/ funcion not /*/
 void Contenedor::Not(list<string>& lista,std::ostream& out) {
  
@@ -1140,10 +1186,12 @@ bool Contenedor::Insert(string url,string fich_pag,int relevancia) {
     c.parar() ;
     (*this).mostrar_datos(c,i) ;
     cargado = true ;
+    return true ;
   }
   else {
     cerr << alert <<"ERROR: no existe el fichero: "
 	 << fich_pag << endl << endl ;
+    return false ;
   }
 }
 
