@@ -1,7 +1,7 @@
 # Buscador AED (2003/2004) — ideas de implementacion
 
-Practica de AED, 2 de ITI de Gestion, UM. Buscador booleano sobre paginas
-generadas, con indice invertido posicional y ranking por relevancia.
+Practica de AED, 2 de ITI de Gestion, UM. Buscador de paginas web con
+indice invertido posicional y ranking por relevancia.
 Revisado y corregido en 2026 (leaks, UB, rendimiento, parser HTML).
 
 ## 1. El problema
@@ -54,8 +54,9 @@ Dos instancias:
 - `Lista_datos`: lista de nodos (una entrada por pagina que contiene la
   palabra) + flags `error` y `permitir_com`.
 
-Las posiciones por palabra son lo que convierte un indice booleano en uno
-posicional: habilitan la busqueda de frase exacta.
+Las posiciones por palabra son lo que hace posicional al indice: sin
+ellas solo se puede responder si una palabra esta o no en una pagina;
+con ellas, ademas, la busqueda de frase exacta.
 
 ### Ranking precalculado (la idea mas fina)
 
