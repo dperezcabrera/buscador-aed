@@ -7,7 +7,45 @@
 #include "estructura_datos.cpp"
 #include "buffer.cpp"
 
+#include "estructuras/hash_clasico.hpp"
+#include "estructuras/flat_hash.hpp"
+#include "estructuras/bloom_hash.hpp"
+#include "estructuras/trie.hpp"
+#include "estructuras/radix.hpp"
+#include "estructuras/avl.hpp"
+#include "estructuras/arbol_b.hpp"
+#include "estructuras/arbol_b_estrella.hpp"
+#include "estructuras/arbol_b_mas.hpp"
+
 #include <cassert>
+
+/*/ tortura de borrado: inserta n, borra pares, verifica,  /*/
+/*/ borra impares, verifica vacio, reinserta               /*/
+template<class Tabla>
+void tortura(Tabla* t, int n) {
+
+  for( int i = 0 ; i < n ; i++ )
+    assert( t->insert( "clave" + std::to_string(i), i ) ) ;
+  for( int i = 0 ; i < n ; i += 2 )
+    assert( t->erase( "clave" + std::to_string(i) ) ) ;
+  for( int i = 0 ; i < n ; i++ ) {
+    int* v = t->search( "clave" + std::to_string(i) ) ;
+    if ( i % 2 )
+      assert( v and ( *v == i ) ) ;
+    else
+      assert( v == NULL ) ;
+  }
+  assert( not t->erase("clave0") ) ; // doble borrado
+  for( int i = 1 ; i < n ; i += 2 )
+    assert( t->erase( "clave" + std::to_string(i) ) ) ;
+  for( int i = 0 ; i < n ; i += n/50 )
+    assert( t->search( "clave" + std::to_string(i) ) == NULL ) ;
+  long s = t->scan() ;
+  assert( ( s == 0 ) or ( s == -1 ) ) ;  // vacia (o sin orden)
+  assert( t->insert( "clave1", 111 ) ) ; // reinsertar tras vaciar
+  assert( *t->search("clave1") == 111 ) ;
+  delete t ;
+}
 
 int main() {
 
@@ -63,6 +101,18 @@ int main() {
     i++ ;
   }
   assert( plano == "busca ( COM foo bar ) " ) ;
+
+  /*/ borrado completo en las estructuras del benchmark /*/
+  const int N = 20000 ;
+  tortura( new ClassicHash(4096), N ) ;
+  tortura( new FlatHash(1<<16),   N ) ;
+  tortura( new BloomHash(4096),   N ) ;
+  tortura( new Trie(),            N ) ;
+  tortura( new Radix(),           N ) ;
+  tortura( new AVL(),             N ) ;
+  tortura( new BTree(),           N ) ;
+  tortura( new BStar(),           N ) ;
+  tortura( new BPlus(),           N ) ;
 
   cout << "OK: todas las comprobaciones pasan" << endl ;
   return 0 ;

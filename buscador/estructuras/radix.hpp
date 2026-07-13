@@ -43,6 +43,43 @@ class Radix
     }
   }
 
+  void absorbe(NodoR* q) { // q sin valor y con hijo unico: comprimir arista
+    NodoR* h = q->hijo ;
+    q->trozo += h->trozo ;
+    q->tiene  = h->tiene ;
+    q->valor  = h->valor ;
+    q->hijo   = h->hijo ;
+    delete h ;
+  }
+
+  // borra k[i..] bajo p; hecho indica si la clave existia;
+  // devuelve true si p ha quedado inutil y debe eliminarse
+  bool borra(NodoR* p, const string& k, unsigned i, bool& hecho) {
+    if ( i == k.size() ) {
+      if ( not p->tiene )
+	return false ;
+      p->tiene = false ;
+      hecho = true ;
+    }
+    else {
+      NodoR** q = &p->hijo ;
+      while ( *q and ( (*q)->trozo[0] != k[i] ) )
+	q = &(*q)->hermano ;
+      if ( ( not *q ) or ( k.compare( i, (*q)->trozo.size(), (*q)->trozo ) != 0 ) )
+	return false ;
+      if ( borra( *q, k, i + (*q)->trozo.size(), hecho ) ) {
+	NodoR* m = *q ;
+	*q = m->hermano ;
+	delete m ;
+      }
+      else if ( hecho and ( not (*q)->tiene )
+		and (*q)->hijo and ( not (*q)->hijo->hermano ) ) {
+	absorbe(*q) ;
+      }
+    }
+    return hecho and ( not p->tiene ) and ( p->hijo == NULL ) ;
+  }
+
  public:
   /*/ operaciones /*/
   Radix() {
@@ -86,13 +123,10 @@ class Radix
     return ( p and p->tiene ) ? &p->valor : NULL ;
   }
 
-  bool erase(const string& k) { // marcado, sin fusionar aristas
-    NodoR* p = baja(k) ;
-    if ( p and p->tiene ) {
-      p->tiene = false ;
-      return true ;
-    }
-    return false ;
+  bool erase(const string& k) { // poda la rama y comprime aristas
+    bool hecho = false ;
+    borra( raiz, k, 0, hecho ) ; // la raiz no se elimina ni fusiona
+    return hecho ;
   }
 
   long scan() { return -1 ; } // hermanos sin ordenar

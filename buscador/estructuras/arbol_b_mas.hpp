@@ -20,7 +20,6 @@ class BPlus
     int      n ;
     string k[2*G]   ;
     int    v[2*G]   ; // solo hojas
-    bool   m[2*G]   ; // solo hojas
     N*     sig      ; // solo hojas
     N*     h[2*G+1] ; // solo internos
 
@@ -34,6 +33,7 @@ class BPlus
   N*       raiz ;
   long   nnodos ;
   bool      dup ;
+  bool  quitado ;
 
   /*/ operaciones /*/
   // inserta descendiendo; si el nodo se parte devuelve el
@@ -48,11 +48,9 @@ class BPlus
       for( int j = x->n-1 ; j >= i ; j-- ) {
 	x->k[j+1] = std::move(x->k[j]) ;
 	x->v[j+1] = x->v[j] ;
-	x->m[j+1] = x->m[j] ;
       }
       x->k[i] = clave ;
       x->v[i] = valor ;
-      x->m[i] = false ;
       x->n++ ;
       if ( x->n < 2*G )
 	return NULL ;
@@ -61,7 +59,6 @@ class BPlus
       for( int j = 0 ; j < G ; j++ ) {
 	d->k[j] = std::move(x->k[j+G]) ;
 	d->v[j] = x->v[j+G] ;
-	d->m[j] = x->m[j+G] ;
       }
       d->n = G ;
       x->n = G ;
@@ -105,9 +102,125 @@ class BPlus
     return x ;
   }
 
+  /*/ auxiliares del borrado /*/
+  // minimos: G claves en hojas, G-1 separadores en internos
+
+  bool sobra(N* y) { return y->hoja ? ( y->n > G ) : ( y->n > G-1 ) ; }
+
+  void presta_izq(N* x, int i) { // hijo i recibe del hermano i-1
+    N *c = x->h[i], *izq = x->h[i-1] ;
+    if ( c->hoja ) {
+      for( int j = c->n-1 ; j >= 0 ; j-- ) {
+	c->k[j+1] = std::move(c->k[j]) ;
+	c->v[j+1] = c->v[j] ;
+      }
+      c->k[0] = std::move(izq->k[izq->n-1]) ;
+      c->v[0] = izq->v[izq->n-1] ;
+      c->n++ ;
+      izq->n-- ;
+      x->k[i-1] = c->k[0] ; // el separador se copia de la nueva primera
+    }
+    else {
+      for( int j = c->n-1 ; j >= 0 ; j-- )
+	c->k[j+1] = std::move(c->k[j]) ;
+      for( int j = c->n ; j >= 0 ; j-- )
+	c->h[j+1] = c->h[j] ;
+      c->k[0] = std::move(x->k[i-1]) ;
+      c->h[0] = izq->h[izq->n] ;
+      x->k[i-1] = std::move(izq->k[izq->n-1]) ;
+      c->n++ ;
+      izq->n-- ;
+    }
+  }
+
+  void presta_der(N* x, int i) { // hijo i recibe del hermano i+1
+    N *c = x->h[i], *der = x->h[i+1] ;
+    if ( c->hoja ) {
+      c->k[c->n] = std::move(der->k[0]) ;
+      c->v[c->n] = der->v[0] ;
+      c->n++ ;
+      for( int j = 0 ; j < der->n-1 ; j++ ) {
+	der->k[j] = std::move(der->k[j+1]) ;
+	der->v[j] = der->v[j+1] ;
+      }
+      der->n-- ;
+      x->k[i] = der->k[0] ; // el separador se copia del nuevo primero
+    }
+    else {
+      c->k[c->n]   = std::move(x->k[i]) ;
+      c->h[c->n+1] = der->h[0] ;
+      c->n++ ;
+      x->k[i] = std::move(der->k[0]) ;
+      for( int j = 0 ; j < der->n-1 ; j++ )
+	der->k[j] = std::move(der->k[j+1]) ;
+      for( int j = 0 ; j < der->n ; j++ )
+	der->h[j] = der->h[j+1] ;
+      der->n-- ;
+    }
+  }
+
+  void une(N* x, int i) { // hijo i absorbe al hermano i+1
+    N *c = x->h[i], *der = x->h[i+1] ;
+    if ( c->hoja ) {
+      for( int j = 0 ; j < der->n ; j++ ) {
+	c->k[c->n+j] = std::move(der->k[j]) ;
+	c->v[c->n+j] = der->v[j] ;
+      }
+      c->n += der->n ;
+      c->sig = der->sig ;
+    }
+    else {
+      c->k[c->n] = std::move(x->k[i]) ; // el separador baja
+      for( int j = 0 ; j < der->n ; j++ )
+	c->k[c->n+1+j] = std::move(der->k[j]) ;
+      for( int j = 0 ; j <= der->n ; j++ )
+	c->h[c->n+1+j] = der->h[j] ;
+      c->n += der->n + 1 ;
+    }
+    for( int j = i ; j < x->n-1 ; j++ )
+      x->k[j] = std::move(x->k[j+1]) ;
+    for( int j = i+1 ; j < x->n ; j++ )
+      x->h[j] = x->h[j+1] ;
+    x->n-- ;
+    delete der ;
+    nnodos-- ;
+  }
+
+  // borra descendiendo; devuelve true si x quedo bajo minimos
+  bool borra(N* x, const string& clave) {
+    if ( x->hoja ) {
+      int i = std::lower_bound( x->k, x->k + x->n, clave ) - x->k ;
+      if ( ( i >= x->n ) or ( x->k[i] != clave ) )
+	return false ;
+      quitado = true ;
+      for( int j = i ; j < x->n-1 ; j++ ) {
+	x->k[j] = std::move(x->k[j+1]) ;
+	x->v[j] = x->v[j+1] ;
+      }
+      x->n-- ;
+      return x->n < G ;
+    }
+    int i = std::upper_bound( x->k, x->k + x->n, clave ) - x->k ;
+    if ( not borra( x->h[i], clave ) )
+      return false ;
+    // el hijo i quedo bajo minimos: prestar o fusionar
+    if ( ( i > 0 ) and sobra(x->h[i-1]) ) {
+      presta_izq(x,i) ;
+      return false ;
+    }
+    if ( ( i < x->n ) and sobra(x->h[i+1]) ) {
+      presta_der(x,i) ;
+      return false ;
+    }
+    if ( i == x->n )
+      i-- ;
+    une(x,i) ;
+    return x->n < G-1 ;
+  }
+
  public:
   /*/ operaciones /*/
-  BPlus() : nnodos(1), dup(false) {
+  BPlus() : nnodos(1), dup(false), quitado(false) {
     raiz = new N(true) ;
   }
 
@@ -130,18 +243,19 @@ class BPlus
   int* search(const string& clave) {
     N* x = hoja_de(clave) ;
     int i = std::lower_bound( x->k, x->k + x->n, clave ) - x->k ;
-    return ( ( i < x->n ) and ( x->k[i] == clave ) and ( not x->m[i] ) )
-	   ? &x->v[i] : NULL ;
+    return ( ( i < x->n ) and ( x->k[i] == clave ) ) ? &x->v[i] : NULL ;
   }
 
-  bool erase(const string& clave) { // marcado
-    N* x = hoja_de(clave) ;
-    int i = std::lower_bound( x->k, x->k + x->n, clave ) - x->k ;
-    if ( ( i < x->n ) and ( x->k[i] == clave ) and ( not x->m[i] ) ) {
-      x->m[i] = true ;
-      return true ;
+  bool erase(const string& clave) { // borrado completo, con fusion de hojas
+    quitado = false ;
+    borra( raiz, clave ) ;
+    if ( ( not raiz->hoja ) and ( raiz->n == 0 ) ) {
+      N* vieja = raiz ;
+      raiz = raiz->h[0] ;
+      delete vieja ;
+      nnodos-- ;
     }
-    return false ;
+    return quitado ;
   }
 
   long scan() { // recorrido secuencial por las hojas enlazadas
@@ -151,8 +265,7 @@ class BPlus
       x = x->h[0] ;
     for( ; x ; x = x->sig )
       for( int i = 0 ; i < x->n ; i++ )
-	if ( not x->m[i] )
-	  acc += x->v[i] ;
+	acc += x->v[i] ;
     return acc ;
   }
 

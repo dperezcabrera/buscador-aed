@@ -19,7 +19,6 @@ struct NodoA
   NodoA*    izq ;
   NodoA*    der ;
   int       alt ;
-  bool   muerto ;
 };
 
 class AVL
@@ -74,7 +73,7 @@ class AVL
   NodoA* inserta(NodoA* n, const string& k, int v) {
     if ( not n ) {
       insertado = true ;
-      return new NodoA{k,v,NULL,NULL,1,false} ;
+      return new NodoA{k,v,NULL,NULL,1} ;
     }
     if      ( k < n->clave ) n->izq = inserta(n->izq,k,v) ;
     else if ( n->clave < k ) n->der = inserta(n->der,k,v) ;
@@ -85,12 +84,34 @@ class AVL
     return balancea(n) ;
   }
 
+  NodoA* borra(NodoA* n, const string& k, bool& hecho) {
+    if ( not n )
+      return NULL ;
+    if      ( k < n->clave ) n->izq = borra(n->izq,k,hecho) ;
+    else if ( n->clave < k ) n->der = borra(n->der,k,hecho) ;
+    else {
+      hecho = true ;
+      if ( ( not n->izq ) or ( not n->der ) ) {
+	NodoA* h = n->izq ? n->izq : n->der ;
+	delete n ;
+	return h ;
+      }
+      NodoA* s = n->der ; // sucesor: minimo del subarbol derecho
+      while ( s->izq )
+	s = s->izq ;
+      n->clave = s->clave ;
+      n->valor = s->valor ;
+      bool aux = false ;
+      n->der = borra( n->der, n->clave, aux ) ;
+    }
+    return balancea(n) ;
+  }
+
   void inorden(NodoA* n) {
     if ( not n )
       return ;
     inorden(n->izq) ;
-    if ( not n->muerto )
-      acc += n->valor ;
+    acc += n->valor ;
     inorden(n->der) ;
   }
 
@@ -107,23 +128,15 @@ class AVL
     for( NodoA* n = raiz ; n ; ) {
       if      ( k < n->clave ) n = n->izq ;
       else if ( n->clave < k ) n = n->der ;
-      else return n->muerto ? NULL : &n->valor ;
+      else return &n->valor ;
     }
     return NULL ;
   }
 
-  bool erase(const string& k) { // marcado
-    for( NodoA* n = raiz ; n ; ) {
-      if      ( k < n->clave ) n = n->izq ;
-      else if ( n->clave < k ) n = n->der ;
-      else {
-	if ( n->muerto )
-	  return false ;
-	n->muerto = true ;
-	return true ;
-      }
-    }
-    return false ;
+  bool erase(const string& k) { // con rebalanceo
+    bool hecho = false ;
+    raiz = borra( raiz, k, hecho ) ;
+    return hecho ;
   }
 
   long scan() {

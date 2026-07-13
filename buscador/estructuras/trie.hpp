@@ -37,6 +37,30 @@ class Trie
     return *q = new NodoT{c,false,0,NULL,NULL} ;
   }
 
+  // borra k[i..] bajo p; hecho indica si la clave existia;
+  // devuelve true si p ha quedado inutil y debe eliminarse
+  bool borra(NodoT* p, const string& k, unsigned i, bool& hecho) {
+    if ( i == k.size() ) {
+      if ( not p->tiene )
+	return false ;
+      p->tiene = false ;
+      hecho = true ;
+    }
+    else {
+      NodoT** q = &p->hijo ;
+      while ( *q and ( (*q)->c != k[i] ) )
+	q = &(*q)->hermano ;
+      if ( not *q )
+	return false ;
+      if ( borra(*q, k, i+1, hecho) ) {
+	NodoT* m = *q ;
+	*q = m->hermano ;
+	delete m ;
+      }
+    }
+    return hecho and ( p->hijo == NULL ) and ( not p->tiene ) ;
+  }
+
  public:
   /*/ operaciones /*/
   Trie() {
@@ -61,15 +85,10 @@ class Trie
     return ( p and p->tiene ) ? &p->valor : NULL ;
   }
 
-  bool erase(const string& k) { // marcado, sin poda
-    NodoT* p = raiz ;
-    for( unsigned i = 0 ; ( i < k.size() ) and p ; i++ )
-      p = baja( p, k[i], false ) ;
-    if ( p and p->tiene ) {
-      p->tiene = false ;
-      return true ;
-    }
-    return false ;
+  bool erase(const string& k) { // con poda de la rama muerta
+    bool hecho = false ;
+    borra( raiz, k, 0, hecho ) ; // la raiz no se elimina nunca
+    return hecho ;
   }
 
   long scan() { return -1 ; } // hermanos sin ordenar

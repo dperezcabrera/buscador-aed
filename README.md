@@ -43,21 +43,24 @@ mismos resultados). Las implementaciones estan en
 
 Minimos de 3 rondas alternadas en la misma tanda:
 
-| Estructura | Memoria | insert | hit | miss | scan orden | erase |
-|---|---|---|---|---|---|---|
-| Flat hash (sondeo lineal) | 61 MB | 287 | 696 | 184 | — | 217 |
-| Hash clasico (encadenado) | 91 MB | 350 | 769 | 685 | — | 270 |
-| close_hash (2004, arreglada) | 122 MB | 369 | 884 | 647 | — | 242 |
-| Bloom (2 MB) + clasico | 93 MB | 445 | 1.074 | 208 | — | 272 |
-| Radix trie (Patricia) | 67 MB | 437 | 1.747 | 7* | — | 606* |
-| AVL | 106 MB | 687 | 1.129 | 210 | 29 ms | 373* |
-| Arbol B (G=32) | 105 MB | 905 | 2.471 | 248 | 6 ms | 852* |
-| Arbol B+ | 110 MB | 888 | 2.830 | 280 | 5 ms | 943* |
-| Arbol B* | 98 MB | 1.244 | 2.828 | 231 | 5 ms | 1.035* |
-| Trie plano | 240 MB | 1.447 | 2.877 | 8* | — | 1.062* |
+| Estructura | Memoria (MB) | insercion (ms) | acierto (ms) | fallo (ms) | recorrido en orden (ms) | borrado (ms) |
+|---|---:|---:|---:|---:|---:|---:|
+| **close_hash (la practica — referencia)** | 122 | 559 | 1.262 | 871 | — | 364 |
+| Flat hash (sondeo lineal) | 61 | 375 | 672 | 176 | — | 235 |
+| Hash clasico (encadenado) | 91 | 467 | 1.039 | 580 | — | 307 |
+| Bloom (2 MB) + clasico | 93 | 614 | 1.546 | 259 | — | 380 |
+| Radix trie (Patricia) | 67 | 586 | 2.136 | 9* | — | 614 |
+| AVL | 106 | 716 | 1.361 | 289 | 27 | 797 |
+| Arbol B (G=32) | 104 | 1.194 | 3.173 | 366 | 6 | 1.320 |
+| Arbol B+ | 109 | 1.291 | 3.837 | 365 | 5 | 1.628 |
+| Arbol B* | 97 | 1.435 | 3.314 | 312 | 5 | 1.293 |
+| Trie plano | 240 | 1.790 | 3.578 | 9* | — | 612 |
 
-Tiempos en ms. `*` erase por marcado (tombstone); miss de trie/radix y de
-los arboles dependiente del corpus (las claves ausentes divergen pronto).
+El borrado es completo en todas (rebalanceo en el AVL, prestamo y fusion
+de nodos en los arboles B, poda de ramas en los tries) salvo en el flat
+hash, que usa tumbas: lo canonico en direccionamiento abierto. `*` fallo
+de trie/radix dependiente del corpus (las claves ausentes divergen
+pronto).
 
 ### Conclusiones
 
@@ -65,26 +68,26 @@ los arboles dependiente del corpus (las claves ausentes divergen pronto).
   correcta. El resto de estructuras tarda entre 2 y 4 veces mas por
   busqueda a cambio de operaciones que el buscador no necesita.
 - **El flat hash gana la categoria**: arrays planos sin punteros, la
-  mejor memoria de la tabla, y miss 3-4x mejor que los encadenados (una
-  celda vacia responde sin comparar strings). Es la razon de que los
-  hashes planos (Swiss tables) dominen hoy.
-- **La close_hash queda a un 5-15% del clasico en insert y hit, y le
-  empata o gana en miss y erase** tras las correcciones (partia de un 50%
-  de desventaja por firmas por valor, y de perder claves por el bug del
-  caso 3). Es la unica de la tabla con factor de carga <= 1 garantizado
-  por construccion.
+  mejor memoria de la tabla, y fallos 3-4 veces mas rapidos que los
+  encadenados (una celda vacia responde sin comparar strings). Es la
+  razon de que los hashes planos (Swiss tables) dominen hoy.
+- **La close_hash queda a un 10-20% del clasico** tras las correcciones
+  (partia de un 50% de desventaja por firmas por valor, y de perder
+  claves por el bug del caso 3). Es la unica de la tabla con factor de
+  carga <= 1 garantizado por construccion.
 - **La compresion de caminos transforma el trie**: de 240 a 67 MB y casi
-  el doble de velocidad, conservando el miss instantaneo y la busqueda
+  el doble de velocidad, conservando el fallo instantaneo y la busqueda
   por prefijo, que ningun hash puede ofrecer.
-- **Un Bloom filter de 2 MB** baja el miss del clasico de 685 a 208 ms a
-  cambio de +40% en los hits: rentable cuando dominan los fallos (el
-  truco de las LSM y las caches).
-- **Los arboles B ganan en recorrido ordenado** (5-6 ms el scan completo,
-  5x mejor que el AVL) y el AVL en busqueda puntual ordenada; el B+ es lo
-  que usan las bases de datos porque su ventaja real (hojas enlazadas =
-  rangos secuenciales, internos sin valores = arbol bajo) se materializa
-  con paginas de disco, no en RAM. El B* cumple su promesa historica: 11%
-  menos nodos a cambio de inserciones mas caras.
+- **Un Bloom filter de 2 MB** baja el fallo del clasico de 580 a 259 ms a
+  cambio de un 50% mas en los aciertos: rentable cuando dominan los
+  fallos (el truco de las LSM y las caches).
+- **Los arboles B ganan en recorrido ordenado** (5-6 ms el recorrido
+  completo, 5 veces mas rapido que el AVL) y el AVL en busqueda puntual
+  ordenada; el B+ es lo que usan las bases de datos porque su ventaja
+  real (hojas enlazadas = rangos secuenciales, internos sin valores =
+  arbol bajo) se materializa con paginas de disco, no en RAM. El B*
+  cumple su promesa historica: 11% menos nodos a cambio de inserciones
+  mas caras.
 
 ## Estructura del repositorio
 
